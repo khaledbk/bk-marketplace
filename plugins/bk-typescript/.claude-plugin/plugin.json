@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bk-typescript",
+  "displayName": "BK TypeScript Guild",
+  "version": "1.0.0",
+  "description": "TypeScript and Node — type design, module boundaries, async correctness.",
+  "author": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "license": "LicenseRef-BK-Internal",
+  "keywords": [
+    "typescript",
+    "guild",
+    "conventions"
+  ],
+  "defaultEnabled": true
+}

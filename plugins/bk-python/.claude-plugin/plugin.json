@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bk-python",
+  "displayName": "BK Python Guild",
+  "version": "1.0.0",
+  "description": "Python services and tooling — typing, packaging, async, data handling.",
+  "author": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "license": "LicenseRef-BK-Internal",
+  "keywords": [
+    "python",
+    "guild",
+    "conventions"
+  ],
+  "defaultEnabled": true
+}

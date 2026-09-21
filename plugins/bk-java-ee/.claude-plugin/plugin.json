@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bk-java-ee",
+  "displayName": "BK Java EE Guild",
+  "version": "1.0.0",
+  "description": "Jakarta EE and Java EE services — CDI, JPA, JAX-RS, EJB, application servers.",
+  "author": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "license": "LicenseRef-BK-Internal",
+  "keywords": [
+    "java-ee",
+    "guild",
+    "conventions"
+  ],
+  "defaultEnabled": true
+}

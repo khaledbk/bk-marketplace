@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bk-swift",
+  "displayName": "BK Swift Guild",
+  "version": "1.0.0",
+  "description": "Swift and Apple platforms — optionals, concurrency, value semantics.",
+  "author": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "license": "LicenseRef-BK-Internal",
+  "keywords": [
+    "swift",
+    "guild",
+    "conventions"
+  ],
+  "defaultEnabled": true
+}

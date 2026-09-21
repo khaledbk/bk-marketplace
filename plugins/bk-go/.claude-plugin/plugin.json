@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bk-go",
+  "displayName": "BK Go Guild",
+  "version": "1.0.0",
+  "description": "Go services — concurrency, error handling, interfaces, module layout.",
+  "author": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "license": "LicenseRef-BK-Internal",
+  "keywords": [
+    "go",
+    "guild",
+    "conventions"
+  ],
+  "defaultEnabled": true
+}

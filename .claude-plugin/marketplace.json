@@ -1,0 +1,152 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "bk",
+  "owner": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "description": "The only approved plugin marketplace for BK Organization.",
+  "version": "1.0.0",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "bk-core",
+      "source": "bk-core",
+      "displayName": "BK Core",
+      "description": "Org workflows and their skills: code review of a diff, and a whole-repository audit.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Workflows",
+      "keywords": [
+        "review",
+        "audit",
+        "workflow",
+        "quality"
+      ]
+    },
+    {
+      "name": "bk-java-ee",
+      "source": "bk-java-ee",
+      "displayName": "BK Java EE Guild",
+      "description": "Jakarta EE and Java EE services — CDI, JPA, JAX-RS, EJB, application servers.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "java-ee",
+        "guild",
+        "conventions"
+      ]
+    },
+    {
+      "name": "bk-typescript",
+      "source": "bk-typescript",
+      "displayName": "BK TypeScript Guild",
+      "description": "TypeScript and Node — type design, module boundaries, async correctness.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "typescript",
+        "guild",
+        "conventions"
+      ]
+    },
+    {
+      "name": "bk-python",
+      "source": "bk-python",
+      "displayName": "BK Python Guild",
+      "description": "Python services and tooling — typing, packaging, async, data handling.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "python",
+        "guild",
+        "conventions"
+      ]
+    },
+    {
+      "name": "bk-go",
+      "source": "bk-go",
+      "displayName": "BK Go Guild",
+      "description": "Go services — concurrency, error handling, interfaces, module layout.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "go",
+        "guild",
+        "conventions"
+      ]
+    },
+    {
+      "name": "bk-ruby",
+      "source": "bk-ruby",
+      "displayName": "BK Ruby Guild",
+      "description": "Ruby and Rails — idiom, metaprogramming restraint, ActiveRecord discipline.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "ruby",
+        "guild",
+        "conventions"
+      ]
+    },
+    {
+      "name": "bk-swift",
+      "source": "bk-swift",
+      "displayName": "BK Swift Guild",
+      "description": "Swift and Apple platforms — optionals, concurrency, value semantics.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "swift",
+        "guild",
+        "conventions"
+      ]
+    },
+    {
+      "name": "bk-java",
+      "source": "bk-java",
+      "displayName": "BK Java Guild",
+      "description": "Modern Java — records, sealed types, streams, JVM performance.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "LicenseRef-BK-Internal",
+      "category": "Intelligence",
+      "keywords": [
+        "java",
+        "guild",
+        "conventions"
+      ]
+    }
+  ]
+}
