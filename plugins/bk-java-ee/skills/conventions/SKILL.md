@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: Java EE engineering conventions for BK Organization — the house rules for writing and reviewing Java EE code. Use when writing, reviewing or refactoring Java EE.
-when_to_use: The work involves Jakarta EE, Java EE, CDI, JPA, JAX-RS, EJB, servlets, or an application server such as WildFly, Payara or WebSphere.
+description: Java EE house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true

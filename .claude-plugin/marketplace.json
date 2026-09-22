@@ -16,7 +16,7 @@
       "source": "bk-core",
       "displayName": "BK Core",
       "description": "Org workflows and their skills: code review of a diff, and a whole-repository audit.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -34,7 +34,7 @@
       "source": "bk-java-ee",
       "displayName": "BK Java EE Guild",
       "description": "Jakarta EE and Java EE services — CDI, JPA, JAX-RS, EJB, application servers.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -51,7 +51,7 @@
       "source": "bk-typescript",
       "displayName": "BK TypeScript Guild",
       "description": "TypeScript and Node — type design, module boundaries, async correctness.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -68,7 +68,7 @@
       "source": "bk-python",
       "displayName": "BK Python Guild",
       "description": "Python services and tooling — typing, packaging, async, data handling.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -85,7 +85,7 @@
       "source": "bk-go",
       "displayName": "BK Go Guild",
       "description": "Go services — concurrency, error handling, interfaces, module layout.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -102,7 +102,7 @@
       "source": "bk-ruby",
       "displayName": "BK Ruby Guild",
       "description": "Ruby and Rails — idiom, metaprogramming restraint, ActiveRecord discipline.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -119,7 +119,7 @@
       "source": "bk-swift",
       "displayName": "BK Swift Guild",
       "description": "Swift and Apple platforms — optionals, concurrency, value semantics.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },
@@ -136,7 +136,7 @@
       "source": "bk-java",
       "displayName": "BK Java Guild",
       "description": "Modern Java — records, sealed types, streams, JVM performance.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },

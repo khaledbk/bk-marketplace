@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: Go engineering conventions for BK Organization — the house rules for writing and reviewing Go code. Use when writing, reviewing or refactoring Go.
-when_to_use: The work involves Go, a `.go` file, `go.mod`, or Go tooling.
+description: Go house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true

@@ -1,7 +1,6 @@
 ---
 name: code-review
-description: Run a code review of a diff, branch or pull request — security, integrity, complexity, i18n, dependencies and lint. Use whenever a code review is asked for, or a change needs checking before it merges.
-when_to_use: There is a concrete code change to review — a diff, a branch, or a PR.
+description: Review a diff, branch or PR for bugs, security and quality issues.
 argument-hint: "[git ref, optional]"
 context: fork
 agent: qa

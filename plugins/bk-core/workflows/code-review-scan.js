@@ -1,7 +1,7 @@
 export const meta = {
-  name: "code-review",
+  name: "code-review-scan",
   description:
-    "Review a diff for security, integrity, complexity, i18n, dependency and lint issues, merged into one ranked report",
+    "Collect code-review findings for a diff across six checks; the caller merges and judges",
   phases: [
     {
       title: "Inventory",

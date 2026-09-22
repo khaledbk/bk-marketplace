@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: Java engineering conventions for BK Organization — the house rules for writing and reviewing Java code. Use when writing, reviewing or refactoring Java.
-when_to_use: The work involves modern Java, a `.java` file, Maven or Gradle, Spring, or the JVM.
+description: Java house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true

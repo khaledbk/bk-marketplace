@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "bk-java-ee",
   "displayName": "BK Java EE Guild",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jakarta EE and Java EE services — CDI, JPA, JAX-RS, EJB, application servers.",
   "author": {
     "name": "BK Organization",

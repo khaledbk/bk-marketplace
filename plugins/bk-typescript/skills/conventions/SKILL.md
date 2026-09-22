@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: TypeScript engineering conventions for BK Organization — the house rules for writing and reviewing TypeScript code. Use when writing, reviewing or refactoring TypeScript.
-when_to_use: The work involves TypeScript, a `.ts` or `.tsx` file, a `tsconfig.json`, or Node and npm tooling.
+description: TypeScript house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true

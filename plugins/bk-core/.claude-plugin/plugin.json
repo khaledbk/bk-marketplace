@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "bk-core",
   "displayName": "BK Core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Org workflows and their skills: code review of a diff, and a whole-repository audit.",
   "author": {
     "name": "BK Organization",

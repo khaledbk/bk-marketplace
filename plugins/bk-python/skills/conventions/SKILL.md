@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: Python engineering conventions for BK Organization — the house rules for writing and reviewing Python code. Use when writing, reviewing or refactoring Python.
-when_to_use: The work involves Python, a `.py` file, `pyproject.toml`, `requirements.txt`, or tooling such as ruff, mypy, pytest or poetry.
+description: Python house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true

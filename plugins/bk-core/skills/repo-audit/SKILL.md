@@ -1,7 +1,6 @@
 ---
 name: repo-audit
-description: Audit a whole repository for security exposure, dependency risk, structural decay, test and documentation gaps, and CI weaknesses. Use when assessing an unfamiliar or neglected codebase, not when reviewing a single change.
-when_to_use: A whole repository needs assessing, rather than one diff.
+description: Audit a whole repository for security, dependency and structural risk.
 argument-hint: "[subdirectory, optional]"
 context: fork
 agent: architect

@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: Swift engineering conventions for BK Organization — the house rules for writing and reviewing Swift code. Use when writing, reviewing or refactoring Swift.
-when_to_use: The work involves Swift, a `.swift` file, SwiftUI, UIKit, or an Xcode project.
+description: Swift house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true

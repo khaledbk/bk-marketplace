@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "bk-ruby",
   "displayName": "BK Ruby Guild",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ruby and Rails — idiom, metaprogramming restraint, ActiveRecord discipline.",
   "author": {
     "name": "BK Organization",

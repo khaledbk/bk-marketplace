@@ -1,7 +1,6 @@
 ---
 name: conventions
-description: Ruby engineering conventions for BK Organization — the house rules for writing and reviewing Ruby code. Use when writing, reviewing or refactoring Ruby.
-when_to_use: The work involves Ruby, a `.rb` file, a Gemfile, Rails, or RSpec.
+description: Ruby house rules for BK Organization.
 allowed-tools: Read, Grep, Glob
 model: inherit
 user-invocable: true
