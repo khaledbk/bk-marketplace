@@ -171,7 +171,7 @@
       "source": "bk-mod-images",
       "displayName": "BK Images",
       "description": "Draws pictures inline on kitty-protocol terminals: Read results, MCP images, pasted images. Hardened fork of claude-mod-images.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "BK Organization"
       },

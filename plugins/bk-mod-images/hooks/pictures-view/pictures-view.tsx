@@ -28,12 +28,14 @@ export type Shown = {
  * @param ui the terminal's elements, from `$.ui.resolve(e)`
  * @param pictures the pictures, in the order their calls ran
  * @param room the most cells each picture's image may take (`roomOf`)
+ * @param canDraw whether the terminal draws pixels; elsewhere the caption stands alone
  * @returns the drawing to place under the row
  */
 export const picturesView = (
   ui: Pick<Elements['terminal'], 'Box' | 'Button' | 'Client' | 'Text' | 'Image'>,
   pictures: ReadonlyArray<Shown>,
   room: Cells,
+  canDraw = true,
 ): RenderNode => {
   const { Box, Button, Client, Text, Image } = ui
 
@@ -45,6 +47,10 @@ export const picturesView = (
         }
 
         const caption = `${name} · ${drawable.width}×${drawable.height}`
+
+        if (!canDraw) {
+          return <Text dimColor>{caption}</Text>
+        }
         const cells = cellsOf(drawable.width, drawable.height, room)
 
         return (

@@ -36,6 +36,14 @@ describe('register', () => {
     })
   })
 
+  test('Apple Terminal draws the caption alone, with no empty picture box', async ($, on) => {
+    engineRow(on, { TERM: 'xterm-256color', TERM_PROGRAM: 'Apple_Terminal' })
+    const ui = await mountRow($, readRow('png', 'image/png', TINY_PNG, '/work/shot.png'))
+
+    expect(await ui.find({ type: 'Image' })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: 'shot.png · 16×12' })).toBeDefined()
+  })
+
   test('a Read of a JPEG draws its decoded pixels', async ($, on) => {
     engineRow(on)
     const ui = await mountRow($, readRow('jpeg', 'image/jpeg', TINY_JPEG))

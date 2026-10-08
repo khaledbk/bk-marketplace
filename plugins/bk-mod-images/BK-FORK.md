@@ -14,6 +14,7 @@ Install from the BK marketplace:
 | :-- | :-- | :-- |
 | Plugin name | `images` | `bk-mod-images`; `$.state` keys renamed with it. `/images` is unchanged. |
 | Decode bounds | Only output size capped, after a full synchronous decode | PNG IHDR and GIF header checked before decoding: above 16 MP the picture is refused with a caption. Encoded input above 20 MiB is refused unread. JPEG decoder capped at 16 MP and 128 MB. One small hostile image can no longer hang or crash the TUI. |
+| Non-kitty terminals | Reserved the picture's full box of empty rows under the alt text | Detects kitty graphics (`KITTY_WINDOW_ID`, a kitty or Ghostty `TERM`/`TERM_PROGRAM`); elsewhere draws the caption alone. |
 | Vendored decoders | fast-png 8.0.0, jpeg-js 0.4.4, omggif 1.0.10 | Unchanged. Verified statement-for-statement against the npm tarballs, whose integrity hashes match the upstream `bun.lock`. |
 
 ## Pulling an upstream release
