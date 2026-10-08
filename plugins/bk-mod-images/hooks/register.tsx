@@ -28,6 +28,7 @@ type Held = {
   drawables: Map<string, Drawable>
   pasted: Map<string, Picture[]>
   maxRows: number
+  canDraw?: Promise<boolean>
 }
 
 const drawableFor = (drawables: Map<string, Drawable>, picture: Picture, maxBytes: number) => {
@@ -92,6 +93,14 @@ async function pastedOf(
 
 // The row as the engine drew it, with its pictures under it; the row alone
 // while there are none or `/images off` holds (read here, so it redraws).
+// Elsewhere an Image draws only its alt over the empty box it reserves, so the caption stands in for it.
+async function speaksKittyGraphics($: EngineInterface): Promise<boolean> {
+  const term = (await $.env.get('TERM')) ?? ''
+  const program = (await $.env.get('TERM_PROGRAM')) ?? ''
+
+  return Boolean(await $.env.get('KITTY_WINDOW_ID')) || /kitty|ghostty/i.test(term) || /ghostty/i.test(program)
+}
+
 async function withPictures(
   $: EngineInterface,
   e: RenderInput<'ToolUse' | 'ToolGroup' | 'UserMessage', 'terminal'>,
@@ -105,11 +114,12 @@ async function withPictures(
 
   const { Box, Button, Client, Text, Image } = $.ui.resolve(e)
   const shown = await shownOf($, held.drawables, pictures)
+  held.canDraw ??= speaksKittyGraphics($)
 
   return (
     <Box flexDirection="column">
       {drawn}
-      {picturesView({ Box, Button, Client, Text, Image }, shown, roomOf(e.viewport, held.maxRows))}
+      {picturesView({ Box, Button, Client, Text, Image }, shown, roomOf(e.viewport, held.maxRows), await held.canDraw)}
     </Box>
   )
 }
