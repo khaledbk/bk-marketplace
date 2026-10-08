@@ -6,7 +6,7 @@
     "email": "khaledbenk@gmail.com"
   },
   "description": "The only approved plugin marketplace for BK Organization.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "metadata": {
     "pluginRoot": "./plugins"
   },
@@ -146,6 +146,61 @@
         "java",
         "guild",
         "conventions"
+      ]
+    },
+    {
+      "name": "bk-mod-filetree",
+      "source": "bk-mod-filetree",
+      "displayName": "BK File Tree",
+      "description": "IDE-style file tree pane that shows where Claude reads, writes and commits. Hardened fork of claude-code-filetree.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "MIT",
+      "category": "Interface",
+      "keywords": [
+        "file-tree",
+        "git",
+        "pane",
+        "mod"
+      ]
+    },
+    {
+      "name": "bk-mod-images",
+      "source": "bk-mod-images",
+      "displayName": "BK Images",
+      "description": "Draws pictures inline on kitty-protocol terminals: Read results, MCP images, pasted images. Hardened fork of claude-mod-images.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "MIT",
+      "category": "Interface",
+      "keywords": [
+        "images",
+        "terminal",
+        "kitty",
+        "mod"
+      ]
+    },
+    {
+      "name": "bk-mod-prismantis",
+      "source": "bk-mod-prismantis",
+      "displayName": "BK Prismantis",
+      "description": "Themed rendering for replies: tables, Mermaid diagrams, code, headings. Fork of prismantis with full-width frames and centered figures.",
+      "version": "1.0.0",
+      "author": {
+        "name": "BK Organization"
+      },
+      "license": "MIT",
+      "category": "Interface",
+      "keywords": [
+        "markdown",
+        "tables",
+        "mermaid",
+        "theme",
+        "mod"
       ]
     }
   ]

@@ -1,0 +1,19 @@
+{
+  "name": "bk-mod-images",
+  "version": "1.0.0",
+  "description": "Draws pictures inline in the transcript on terminals that speak the kitty graphics protocol (kitty, Ghostty): Read results for PNG, JPEG and GIF, MCP image blocks, and pasted images; name and size elsewhere. BK fork of claude-mod-images.",
+  "author": {
+    "name": "BK Organization"
+  },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "maxRows": {
+      "type": "number",
+      "title": "Picture height",
+      "description": "The most terminal rows a picture takes, its caption included, from 2 to 256. A short terminal gives a picture half its height at most.",
+      "required": false,
+      "default": 20
+    }
+  }
+}

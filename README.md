@@ -18,6 +18,9 @@ from.
 | `bk-ruby` | Intelligence | Ruby conventions |
 | `bk-swift` | Intelligence | Swift conventions |
 | `bk-java` | Intelligence | Modern Java conventions |
+| `bk-mod-filetree` | Interface | File tree pane, `/filetree` |
+| `bk-mod-images` | Interface | Inline pictures on kitty-protocol terminals, `/images` |
+| `bk-mod-prismantis` | Interface | Themed reply rendering, `/prismantis` |
 
 ## bk-core
 
@@ -43,6 +46,17 @@ namespace — `/bk-core:code-review` can only be one of them.
 One skill each, `conventions`, invoked as `/bk-<language>:conventions`. They carry the house
 rules for that language and nothing else: no tooling, no MCP servers, no hooks.
 
+## Interface mods
+
+Forks of third-party Claude Code mods, audited and hardened before import. Each plugin's
+`BK-FORK.md` names the upstream commit, every change made, and how to pull a new release.
+
+| Mod | Upstream | Main hardening |
+| --- | --- | --- |
+| `bk-mod-filetree` | `data-goblin/claude-code-filetree` | macOS opens no launchable or executable file; file names reach the prompt quoted |
+| `bk-mod-images` | `adamNewell/claude-mod-images` | Image headers bounded before decode (decompression-bomb DoS) |
+| `bk-mod-prismantis` | `NahumLitvin/prismantis` | Only web links pressable; copies stripped of bidi overrides |
+
 ## Local development
 
     claude plugin marketplace add /path/to/bk-marketplace
@@ -60,3 +74,5 @@ or add the pattern.
       .claude-plugin/plugin.json
       skills/<skill>/SKILL.md
       workflows/<workflow>.js          bk-core only
+      hooks/hooks.json, hooks/*.tsx    bk-mod-* only
+      BK-FORK.md                       bk-mod-* only
