@@ -17,16 +17,16 @@ export type MeterProps = {
   columns: number
 }
 
-type Local = { phase: number; seen: number; advancedAt: number; stretch: number; ref: { stop?: () => void } }
+type Local = { phase: number; seen: number; advancedAt: number; ref: { stop?: () => void } }
 
 const TICK_MS = { full: 90, calm: 260, off: 0 } as const
 const BREATH_TICKS = 12
-const GLOW = ['▓', '▓', '▒', '░']
-const EMBERS = 3
-const PUFF = 6
-const MAX_TRAIL = 14
-const CATCH_UP_CELLS_PER_TICK = 2
 const FLAME = '#ffe066'
+const CAP_LEFT = '\ue0b6'
+const CAP_RIGHT = '\ue0b4'
+const RING = [['◜', '◞'], ['◟', '◝']] as const
+const RING_TICKS = 3
+const SURGE_TICKS = 10
 
 type Rgb = [number, number, number]
 
@@ -84,13 +84,12 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   const rightWidth = 1 + percent.length + 2 + amount.length + 2 + [...props.head].length + 1 + [...label].length
   const columns = surface.columns || props.columns
   const bar = Math.max(8, columns - rightWidth - 1)
-  // The rounded cap sits one cell behind the core, so the core starts one cell in.
-  const leadAt = (tokens: number) => Math.max(1, Math.min(bar - 1, Math.round((props.isKnown ? Math.max(0, Math.min(1, tokens / window)) : 0) * bar)))
-  const lead = leadAt(props.tokens)
+  // The ball keeps a ring cell on each side inside the two caps.
+  const lead = Math.max(2, Math.min(bar - 3, Math.round(ratio * bar)))
 
   let state = surface.state
   if (state === undefined) {
-    state = { phase: 0, seen: props.tokens, advancedAt: -1_000, stretch: EMBERS, ref: {} }
+    state = { phase: 0, seen: props.tokens, advancedAt: -1_000, ref: {} }
     surface.setState(state)
     const ms = TICK_MS[props.animation] ?? 0
     if (ms > 0) {
@@ -100,40 +99,36 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
       })
     }
   } else if (props.tokens !== state.seen) {
-    // An advance leaves embers back to where the ball was; they then catch up to it.
-    const grew = props.tokens > state.seen
-    const stretch = Math.min(MAX_TRAIL, Math.max(PUFF, lead - leadAt(state.seen) + EMBERS))
-    state = { ...state, seen: props.tokens, advancedAt: grew ? state.phase : state.advancedAt, stretch: grew ? stretch : state.stretch }
+    state = { ...state, seen: props.tokens, advancedAt: props.tokens > state.seen ? state.phase : state.advancedAt }
     surface.setState(state)
   }
 
   const still = props.animation === 'off'
   const breath = still ? 0.5 : (1 + Math.sin((state.phase / BREATH_TICKS) * Math.PI * 2)) / 2
-  // Two out-of-step waves make the core flicker like a flame rather than blink.
+  // Two out-of-step waves make the ball flicker like a flame rather than blink.
   const flicker = still ? 0.5 : (2 + Math.sin(state.phase * 1.7) + Math.sin(state.phase * 2.9)) / 4
-  const trail = still ? EMBERS : Math.max(EMBERS, state.stretch - (state.phase - state.advancedAt) * CATCH_UP_CELLS_PER_TICK)
-  const spark = (k: number) => (still ? 0.5 : (2 + Math.sin(state.phase * 1.7 + k * 1.3) + Math.sin(state.phase * 2.9 + k * 0.7)) / 4)
+  // An advance swells the wave for a moment, then it settles back.
+  const surge = still ? 0 : Math.max(0, 1 - (state.phase - state.advancedAt) / SURGE_TICKS)
+  const wave = (i: number) => (still ? 0 : Math.sin(i * 0.45 - state.phase * 0.6) * (0.12 + 0.1 * surge))
+  const ring = RING[Math.floor(state.phase / RING_TICKS) % 2]!
+
+  const heatOf = (i: number) => heatAt(((i + 0.5) / bar) * window, window, props.greenUntil)
+  const trackOf = (i: number) => mix(props.track, heatOf(i), 0.22)
+  const filledOf = (i: number) => {
+    const w = wave(i)
+    return w >= 0 ? mix(heatOf(i), '#ffffff', w) : mix(heatOf(i), '#000000', -w)
+  }
+  const glow = mix(heat, '#ffffff', 0.35 + 0.3 * breath)
 
   const cells = []
   for (let i = 0; i < bar; i++) {
-    if (i < lead - 1) {
-      const base = heatAt(((i + 0.5) / bar) * window, window, props.greenUntil)
-      // Embers stay on the thin bar line, dimmer than the front pulse; past the resting length they read as sparks.
-      const k = lead - 1 - i
-      const ember = k <= trail ? (1 - (k - 1) / trail) * (0.2 + 0.45 * spark(k)) : 0
-      cells.push(<Text color={ember > 0 ? mix(base, FLAME, ember) : base}>{k > EMBERS && k <= trail ? '╍' : '━'}</Text>)
-    } else if (i === lead - 1) {
-      cells.push(<Text color={mix(heat, '#ffffff', 0.1)}>{'\ue0b6'}</Text>)
-    } else if (i === lead) {
-      cells.push(<Text color={mix(heat, FLAME, 0.2 + 0.5 * flicker)}>█</Text>)
-    } else {
-      // The square core runs straight into the pulse; only its brightness breathes, never its width.
-      const d = i - lead
-      // The breath reaches each cell a little later than the one before, so the flame licks forward.
-      const lick = still ? breath : (1 + Math.sin(((state.phase - d * 2) / BREATH_TICKS) * Math.PI * 2)) / 2
-      const glow = d <= GLOW.length ? (1 - (d - 1) / GLOW.length) * (0.35 + 0.45 * lick) : 0
-      cells.push(glow > 0 ? <Text color={mix(props.track, heat, glow)}>{GLOW[d - 1]}</Text> : <Text color={props.track}>─</Text>)
-    }
+    const filled = i < lead
+    if (i === 0) cells.push(<Text color={filled ? heatOf(0) : trackOf(0)}>{CAP_LEFT}</Text>)
+    else if (i === bar - 1) cells.push(<Text color={trackOf(i)}>{CAP_RIGHT}</Text>)
+    else if (i === lead) cells.push(<Text color={mix(heat, FLAME, 0.3 + 0.5 * flicker)} backgroundColor={heatOf(i)} bold>●</Text>)
+    else if (i === lead - 1) cells.push(<Text color={glow} backgroundColor={heatOf(i)}>{ring[0]}</Text>)
+    else if (i === lead + 1) cells.push(<Text color={glow} backgroundColor={trackOf(i)}>{ring[1]}</Text>)
+    else cells.push(<Text color={filled ? filledOf(i) : trackOf(i)}>█</Text>)
   }
 
   // The labels never shrink; a width the surface reports a few cells off only trims the bar.
