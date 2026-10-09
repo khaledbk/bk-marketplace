@@ -74,6 +74,13 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
+  // A /model switch sends no request, so without this the label waits for the next prompt.
+  on('classic.PostModelSwitch', async ($, e, next) => {
+    const switched = await next(e)
+    if (!e.agent_id) await measure($).catch(() => undefined)
+    return switched
+  })
+
   on('classic.PostToolUse', async ($, e, next) => {
     await noteEffort($, e).catch(() => undefined)
     return next(e)
