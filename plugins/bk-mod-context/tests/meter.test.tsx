@@ -105,34 +105,25 @@ const barCells = async (ui: any) => {
 }
 
 for (const tokens of [0, 500_000, 1_000_000]) {
-  test(`the bar is a full-height pill with a ringed ball at ${tokens} tokens`, async ($, on) => {
+  test(`the bar is a square full-height block with no ball at ${tokens} tokens`, async ($, on) => {
     world(on, { tokens, window: 1_000_000, percent: tokens / 10_000 })
     await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
     const ui = await $.ui.mount(band())
     const cells = await barCells(ui)
-    const chars = cells.map((c: any) => c.ch)
-    expect(chars[0]).toBe(String.fromCodePoint(0xe0b6))
-    expect(chars.at(-1)).toBe(String.fromCodePoint(0xe0b4))
-    const ball = chars.indexOf('●')
-    expect(chars.filter((ch: string) => ch === '●').length).toBe(1)
-    expect(['◜', '◟']).toContain(chars[ball - 1])
-    expect(['◞', '◝']).toContain(chars[ball + 1])
-    expect(cells[ball].bg).toBeDefined()
-    expect(chars.slice(1, ball - 1).every((ch: string) => ch === '█')).toBe(true)
-    expect(chars.slice(ball + 2, -1).every((ch: string) => ch === '█')).toBe(true)
-    expect(chars.length).toBeGreaterThan(8)
+    expect(cells.length).toBeGreaterThan(8)
+    expect(cells.every((c: any) => c.ch === '█' && c.bg === undefined)).toBe(true)
     await ui.unmount()
   })
 }
 
-test('the fill carries the heat and the track past the ball is a dim tint of it', async ($, on) => {
+test('the fill carries the heat and the unreached track is a faint tint of it', async ($, on) => {
   world(on, { tokens: 500_000, window: 1_000_000, percent: 50 })
   await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
   const ui = await $.ui.mount(band())
   const cells = await barCells(ui)
-  const ball = cells.findIndex((c: any) => c.ch === '●')
+  const half = Math.round(cells.length / 2)
   const brightness = (hex: string) => [1, 3, 5].reduce((sum, i) => sum + parseInt(hex.slice(i, i + 2), 16), 0)
-  expect(brightness(cells[ball - 3].color)).toBeGreaterThan(brightness(cells[ball + 3].color))
+  expect(brightness(cells[half - 2].color)).toBeGreaterThan(brightness(cells[half + 2].color) * 2)
   await ui.unmount()
 })
 

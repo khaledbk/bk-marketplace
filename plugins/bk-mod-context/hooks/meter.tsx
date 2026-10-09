@@ -20,13 +20,8 @@ export type MeterProps = {
 type Local = { phase: number; seen: number; advancedAt: number; ref: { stop?: () => void } }
 
 const TICK_MS = { full: 90, calm: 260, off: 0 } as const
-const BREATH_TICKS = 12
-const FLAME = '#ffe066'
-const CAP_LEFT = '\ue0b6'
-const CAP_RIGHT = '\ue0b4'
-const RING = [['◜', '◞'], ['◟', '◝']] as const
-const RING_TICKS = 3
 const SURGE_TICKS = 10
+const TRACK_TINT = 0.12
 
 type Rgb = [number, number, number]
 
@@ -84,8 +79,7 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   const rightWidth = 1 + percent.length + 2 + amount.length + 2 + [...props.head].length + 1 + [...label].length
   const columns = surface.columns || props.columns
   const bar = Math.max(8, columns - rightWidth - 1)
-  // The ball keeps a ring cell on each side inside the two caps.
-  const lead = Math.max(2, Math.min(bar - 3, Math.round(ratio * bar)))
+  const lead = Math.max(0, Math.min(bar, Math.round(ratio * bar)))
 
   let state = surface.state
   if (state === undefined) {
@@ -104,32 +98,18 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   }
 
   const still = props.animation === 'off'
-  const breath = still ? 0.5 : (1 + Math.sin((state.phase / BREATH_TICKS) * Math.PI * 2)) / 2
-  // Two out-of-step waves make the ball flicker like a flame rather than blink.
-  const flicker = still ? 0.5 : (2 + Math.sin(state.phase * 1.7) + Math.sin(state.phase * 2.9)) / 4
   // An advance swells the wave for a moment, then it settles back.
   const surge = still ? 0 : Math.max(0, 1 - (state.phase - state.advancedAt) / SURGE_TICKS)
   const wave = (i: number) => (still ? 0 : Math.sin(i * 0.45 - state.phase * 0.6) * (0.12 + 0.1 * surge))
-  const ring = RING[Math.floor(state.phase / RING_TICKS) % 2]!
 
   const heatOf = (i: number) => heatAt(((i + 0.5) / bar) * window, window, props.greenUntil)
-  const trackOf = (i: number) => mix(props.track, heatOf(i), 0.22)
+  const trackOf = (i: number) => mix(props.track, heatOf(i), TRACK_TINT)
   const filledOf = (i: number) => {
     const w = wave(i)
     return w >= 0 ? mix(heatOf(i), '#ffffff', w) : mix(heatOf(i), '#000000', -w)
   }
-  const glow = mix(heat, '#ffffff', 0.35 + 0.3 * breath)
-
   const cells = []
-  for (let i = 0; i < bar; i++) {
-    const filled = i < lead
-    if (i === 0) cells.push(<Text color={filled ? heatOf(0) : trackOf(0)}>{CAP_LEFT}</Text>)
-    else if (i === bar - 1) cells.push(<Text color={trackOf(i)}>{CAP_RIGHT}</Text>)
-    else if (i === lead) cells.push(<Text color={mix(heat, FLAME, 0.3 + 0.5 * flicker)} backgroundColor={heatOf(i)} bold>●</Text>)
-    else if (i === lead - 1) cells.push(<Text color={glow} backgroundColor={heatOf(i)}>{ring[0]}</Text>)
-    else if (i === lead + 1) cells.push(<Text color={glow} backgroundColor={trackOf(i)}>{ring[1]}</Text>)
-    else cells.push(<Text color={filled ? filledOf(i) : trackOf(i)}>█</Text>)
-  }
+  for (let i = 0; i < bar; i++) cells.push(<Text color={i < lead ? filledOf(i) : trackOf(i)}>█</Text>)
 
   // The labels never shrink; a width the surface reports a few cells off only trims the bar.
   return (
