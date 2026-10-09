@@ -83,7 +83,8 @@ export const register: Register = (on, options) => {
     }
     const { Box, Client } = $.ui.resolve(e)
     return (
-      <Box flexDirection="column" width={e.props.bodyColumns}>
+      // The engine refuses its own band node under a sized Box, so only the meter carries the width.
+      <Box flexDirection="column">
         <Client key="meter" module="./meter.tsx" props={props} width={e.props.bodyColumns} height={1} />
         {rest ?? null}
       </Box>
