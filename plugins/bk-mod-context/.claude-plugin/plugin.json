@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bk-mod-context",
+  "displayName": "BK Context Meter",
+  "version": "1.0.0",
+  "description": "Full-width context meter above the prompt: real token fill from the API, a green-to-red heat bar with a glowing leading edge, and the model and effort beside it.",
+  "author": {
+    "name": "BK Organization",
+    "email": "khaledbenk@gmail.com"
+  },
+  "license": "LicenseRef-BK-Internal",
+  "keywords": ["context", "tokens", "meter", "mod"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "greenUntil": {
+      "type": "number",
+      "title": "Green until",
+      "description": "Tokens of context that stay green; past it the bar heats through yellow and orange to red at the full window. On a window smaller than 2.5 times this, 40% of the window is used instead.",
+      "default": 380000
+    },
+    "animation": {
+      "type": "string",
+      "title": "Animation",
+      "description": "full: the leading edge breathes and a light sweeps the bar each time it advances. calm: the same, slower. off: a still bar.",
+      "default": "full",
+      "options": ["full", "calm", "off"]
+    }
+  }
+}

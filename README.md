@@ -21,6 +21,7 @@ from.
 | `bk-mod-filetree` | Interface | File tree pane, `/filetree` |
 | `bk-mod-images` | Interface | Inline pictures on kitty-protocol terminals, `/images` |
 | `bk-mod-prismantis` | Interface | Themed reply rendering, `/prismantis` |
+| `bk-mod-context` | Interface | Context meter above the prompt: heat bar, model and effort |
 
 ## bk-core
 
