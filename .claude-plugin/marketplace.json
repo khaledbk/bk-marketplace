@@ -153,7 +153,7 @@
       "source": "bk-mod-filetree",
       "displayName": "BK File Tree",
       "description": "IDE-style file tree pane that shows where Claude reads, writes and commits. Hardened fork of claude-code-filetree.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "BK Organization"
       },

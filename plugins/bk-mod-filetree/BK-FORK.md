@@ -19,6 +19,7 @@ Install from the BK marketplace:
 | `HERDR_BIN_PATH` | Any binary named by the variable | Only an absolute path ending in `/herdr`; otherwise `herdr` from `PATH`. |
 | Long names | Cut at the end, hiding the extension | Cut in the middle, extension kept visible. |
 | Palette | Blue-grey | New `palette` option, default `bk-green`: `#28fe14` text, `#00ff00` accent, `#1f8f14` muted, `#0b4f0b` selection, terminal-black background. Git status and activity colours unchanged. |
+| Icon colors | Folders in the accent color, files muted, both overridden by git status | Each icon takes a color per file type and per well-known folder name (`src`, `tests`, `docs`, `.git` ...), in Material Design hues picked to match the MIT-licensed [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) by eye, not extracted from its files; blue-grey otherwise. Ignored files stay muted. File names, git colors and the activity shimmer are unchanged. |
 
 ## Pulling an upstream release
 
