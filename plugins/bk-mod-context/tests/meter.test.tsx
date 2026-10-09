@@ -56,6 +56,7 @@ test('the band draws the fill, the model and the effort across the full width', 
   const ui = await $.ui.mount(band())
   const client = await ui.find({ type: 'Client' })
   expect(client?.props.width).toBe(100)
+  expect((await ui.findAll({ type: 'Box' })).filter(b => b.props.width !== undefined)).toEqual([])
   expect(await ui.find({ type: 'Text', text: 'engine band' })).toBeDefined()
   const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
   for (const word of ['41%', '412K/1M', '▐▛███▜▌', 'Opus 5.5 1M', 'high']) expect(drawn).toContain(word)
