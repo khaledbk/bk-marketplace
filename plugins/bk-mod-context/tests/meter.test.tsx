@@ -116,6 +116,40 @@ for (const tokens of [0, 500_000, 1_000_000]) {
   })
 }
 
+const barCells = async (ui: any) => {
+  const meter = (await ui.drawn({ in: 'meter' })) as any
+  return meter.children[0].children[0].children.map((c: any) => ({ ch: c.children[0] as string, color: c.props.color as string }))
+}
+
+test('three embers glow behind the cap and the bar past them keeps its heat', async ($, on) => {
+  world(on, { tokens: 500_000, window: 1_000_000, percent: 50 })
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  const cells = await barCells(ui)
+  const cap = cells.findIndex((c: any) => c.ch === String.fromCodePoint(0xe0b6))
+  const plain = (i: number) => heatAt(((i + 0.5) / cells.length) * 1_000_000, 1_000_000, 380_000)
+  for (const k of [1, 2, 3]) {
+    expect(cells[cap - k].ch).toBe('━')
+    expect(cells[cap - k].color).not.toBe(plain(cap - k))
+  }
+  expect(cells[cap - 4].color).toBe(plain(cap - 4))
+  await ui.unmount()
+})
+
+test('an advance leaves sparks back toward where the ball was', async ($, on) => {
+  world(on, { tokens: 500_000, window: 1_000_000, percent: 50 })
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  expect((await barCells(ui)).some((c: any) => c.ch === '╍')).toBe(false)
+  await $.session.measure({ context: { tokens: 560_000, window: 1_000_000, percent: 56 }, rateLimits: [], changed: ['context'] } as any)
+  const cells = await barCells(ui)
+  const cap = cells.findIndex((c: any) => c.ch === String.fromCodePoint(0xe0b6))
+  const sparks = cells.slice(0, cap).filter((c: any) => c.ch === '╍').length
+  expect(sparks).toBeGreaterThan(0)
+  expect(sparks).toBeLessThanOrEqual(14 - 3)
+  await ui.unmount()
+})
+
 test('the effort comes from the hook input Claude Code stamps on Stop', async ($, on) => {
   world(on, { tokens: 10_000, window: 1_000_000, percent: 1 }, 'claude-opus-5-5', '')
   on('classic.Stop', () => ({}) as any)
