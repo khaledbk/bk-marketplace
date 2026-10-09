@@ -37,6 +37,12 @@ async function measure($: EngineInterface, context?: SessionContextUsage): Promi
   await update($, SETTING, (setting): ModelSetting => ({ model, effort: effort || setting.effort }))
 }
 
+// Claude Code stamps the applied effort on these hook inputs; a model request may carry none.
+async function noteEffort($: EngineInterface, e: { agent_id?: string; effort?: { level: string } }): Promise<void> {
+  const level = e.effort?.level
+  if (!e.agent_id && level) await update($, SETTING, setting => (setting.effort === level ? setting : { ...setting, effort: level }))
+}
+
 export const register: Register = (on, options) => {
   const greenUntil = typeof options.greenUntil === 'number' && options.greenUntil > 0 ? options.greenUntil : 380_000
   const animation = options.animation === 'calm' || options.animation === 'off' ? options.animation : 'full'
@@ -49,6 +55,16 @@ export const register: Register = (on, options) => {
 
   on('session.measure', async ($, e, next) => {
     await measure($, e.context).catch(() => undefined)
+    return next(e)
+  })
+
+  on('classic.PostToolUse', async ($, e, next) => {
+    await noteEffort($, e).catch(() => undefined)
+    return next(e)
+  })
+
+  on('classic.Stop', async ($, e, next) => {
+    await noteEffort($, e).catch(() => undefined)
     return next(e)
   })
 

@@ -22,6 +22,8 @@ type Local = { phase: number; seen: number; sweepAt: number; ref: { stop?: () =>
 const TICK_MS = { full: 90, calm: 260, off: 0 } as const
 const BREATH_TICKS = 16
 const SWEEP_CELLS_PER_TICK = 1.5
+const GLOW_CELLS = 4
+const FLAME = '#ffe066'
 
 type Rgb = [number, number, number]
 
@@ -95,33 +97,29 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   const rightWidth = 1 + percent.length + 2 + amount.length + 2 + [...props.head].length + 1 + [...label].length
   const columns = surface.columns || props.columns
   const bar = Math.max(8, columns - rightWidth - 1)
-  // The bulb is three cells wide, so its centre stays one cell in from either end.
-  const lead = Math.max(1, Math.min(bar - 2, Math.round(ratio * bar)))
+  const lead = Math.max(0, Math.min(bar - 1, Math.round(ratio * bar)))
 
   const still = props.animation === 'off'
   const breath = still ? 0.5 : (1 + Math.sin((state.phase / BREATH_TICKS) * Math.PI * 2)) / 2
+  // Two out-of-step waves make the core flicker like a flame rather than blink.
+  const flicker = still ? 0.5 : (2 + Math.sin(state.phase * 1.7) + Math.sin(state.phase * 2.9)) / 4
   const sweep = (state.phase - state.sweepAt) * SWEEP_CELLS_PER_TICK
   const sweeping = !still && sweep >= 0 && sweep < lead + 4
 
   const cells = []
   for (let i = 0; i < bar; i++) {
-    if (i < lead - 1) {
+    if (i < lead) {
       const base = heatAt(((i + 0.5) / bar) * window, window, props.greenUntil)
-      const near = lead - 1 - i
-      const lit = sweeping && Math.abs(i - sweep) < 1.5 ? 0.6 : near === 1 ? 0.25 + 0.25 * breath : 0
+      const near = lead - i
+      const lit = sweeping && Math.abs(i - sweep) < 1.5 ? 0.6 : near === 1 ? 0.3 + 0.25 * flicker : 0
       cells.push(<Text color={lit ? mix(base, '#ffffff', lit) : base}>━</Text>)
-    } else if (i === lead - 1) {
-      cells.push(<Text color={mix(heat, '#ffffff', 0.1)}>{'\ue0b6'}</Text>)
     } else if (i === lead) {
-      cells.push(<Text color={mix(heat, '#ffffff', 0.3 + 0.4 * breath)}>█</Text>)
-    } else if (i === lead + 1) {
-      cells.push(<Text color={mix(heat, '#ffffff', 0.1)}>{'\ue0b4'}</Text>)
+      cells.push(<Text bold color={mix(heat, FLAME, 0.2 + 0.5 * flicker)}>●</Text>)
     } else {
-      // A halo of shade blocks in the bulb's color, reaching further as it breathes in.
-      const d = i - lead - 1
-      const reach = 2 + Math.round(2 * breath)
-      const glow = d <= reach ? (1 - (d - 1) / (reach + 1)) * (0.45 + 0.35 * breath) : 0
-      cells.push(glow > 0.05 ? <Text color={mix(props.track, heat, glow)}>{glow > 0.55 ? '▓' : glow > 0.3 ? '▒' : '░'}</Text> : <Text color={props.track}>─</Text>)
+      // A thin pulse over a fixed reach: only its brightness breathes, never its width.
+      const d = i - lead
+      const glow = d <= GLOW_CELLS ? (1 - (d - 1) / GLOW_CELLS) * (0.3 + 0.5 * breath) : 0
+      cells.push(<Text color={glow > 0 ? mix(props.track, heat, glow) : props.track}>{d === 1 ? '╸' : '─'}</Text>)
     }
   }
 
