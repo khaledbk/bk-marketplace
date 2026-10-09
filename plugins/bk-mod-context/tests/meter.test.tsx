@@ -99,54 +99,40 @@ test('the effort comes from the live request and survives a measurement that can
   await ui.unmount()
 })
 
+const barCells = async (ui: any) => {
+  const meter = (await ui.drawn({ in: 'meter' })) as any
+  return meter.children[0].children[0].children.map((c: any) => ({ ch: c.children[0] as string, color: c.props.color as string, bg: c.props.backgroundColor as string | undefined }))
+}
+
 for (const tokens of [0, 500_000, 1_000_000]) {
-  test(`the head is a rounded cap and a square core, then a four-cell pulse, at ${tokens} tokens`, async ($, on) => {
+  test(`the bar is a full-height pill with a ringed ball at ${tokens} tokens`, async ($, on) => {
     world(on, { tokens, window: 1_000_000, percent: tokens / 10_000 })
     await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
     const ui = await $.ui.mount(band())
-    const meter = (await ui.drawn({ in: 'meter' })) as any
-    const bar = [...meter.children[0].children[0].children.map((c: any) => c.children[0]).join('')]
-    const cap = bar.indexOf(String.fromCodePoint(0xe0b6))
-    expect(bar.filter(ch => ch === String.fromCodePoint(0xe0b6)).length).toBe(1)
-    expect(bar).not.toContain(String.fromCodePoint(0xe0b4))
-    expect(bar[cap + 1]).toBe('█')
-    expect(bar.slice(cap + 2, cap + 6).join('')).toBe('▓▓▒░'.slice(0, Math.max(0, bar.length - cap - 2)))
-    expect(bar.slice(cap + 6).every(ch => ch === '─')).toBe(true)
+    const cells = await barCells(ui)
+    const chars = cells.map((c: any) => c.ch)
+    expect(chars[0]).toBe(String.fromCodePoint(0xe0b6))
+    expect(chars.at(-1)).toBe(String.fromCodePoint(0xe0b4))
+    const ball = chars.indexOf('●')
+    expect(chars.filter((ch: string) => ch === '●').length).toBe(1)
+    expect(['◜', '◟']).toContain(chars[ball - 1])
+    expect(['◞', '◝']).toContain(chars[ball + 1])
+    expect(cells[ball].bg).toBeDefined()
+    expect(chars.slice(1, ball - 1).every((ch: string) => ch === '█')).toBe(true)
+    expect(chars.slice(ball + 2, -1).every((ch: string) => ch === '█')).toBe(true)
+    expect(chars.length).toBeGreaterThan(8)
     await ui.unmount()
   })
 }
 
-const barCells = async (ui: any) => {
-  const meter = (await ui.drawn({ in: 'meter' })) as any
-  return meter.children[0].children[0].children.map((c: any) => ({ ch: c.children[0] as string, color: c.props.color as string }))
-}
-
-test('three embers glow behind the cap and the bar past them keeps its heat', async ($, on) => {
+test('the fill carries the heat and the track past the ball is a dim tint of it', async ($, on) => {
   world(on, { tokens: 500_000, window: 1_000_000, percent: 50 })
   await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
   const ui = await $.ui.mount(band())
   const cells = await barCells(ui)
-  const cap = cells.findIndex((c: any) => c.ch === String.fromCodePoint(0xe0b6))
-  const plain = (i: number) => heatAt(((i + 0.5) / cells.length) * 1_000_000, 1_000_000, 380_000)
-  for (const k of [1, 2, 3]) {
-    expect(cells[cap - k].ch).toBe('━')
-    expect(cells[cap - k].color).not.toBe(plain(cap - k))
-  }
-  expect(cells[cap - 4].color).toBe(plain(cap - 4))
-  await ui.unmount()
-})
-
-test('an advance leaves sparks back toward where the ball was', async ($, on) => {
-  world(on, { tokens: 500_000, window: 1_000_000, percent: 50 })
-  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
-  const ui = await $.ui.mount(band())
-  expect((await barCells(ui)).some((c: any) => c.ch === '╍')).toBe(false)
-  await $.session.measure({ context: { tokens: 560_000, window: 1_000_000, percent: 56 }, rateLimits: [], changed: ['context'] } as any)
-  const cells = await barCells(ui)
-  const cap = cells.findIndex((c: any) => c.ch === String.fromCodePoint(0xe0b6))
-  const sparks = cells.slice(0, cap).filter((c: any) => c.ch === '╍').length
-  expect(sparks).toBeGreaterThan(0)
-  expect(sparks).toBeLessThanOrEqual(14 - 3)
+  const ball = cells.findIndex((c: any) => c.ch === '●')
+  const brightness = (hex: string) => [1, 3, 5].reduce((sum, i) => sum + parseInt(hex.slice(i, i + 2), 16), 0)
+  expect(brightness(cells[ball - 3].color)).toBeGreaterThan(brightness(cells[ball + 3].color))
   await ui.unmount()
 })
 

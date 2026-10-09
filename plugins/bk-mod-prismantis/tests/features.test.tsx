@@ -4,7 +4,7 @@ import type { TestBody } from 'claude-code/testing'
 
 import { parse } from '../hooks/markdown'
 import { PRESETS } from '../hooks/presets'
-import { columnWidths, formatDuration, groupSummary } from '../hooks/render'
+import { columnWidths, formatDuration, groupSummary, toolResult } from '../hooks/render'
 
 const t = PRESETS['catppuccin-mocha']
 const engine = (on: On) =>
@@ -94,7 +94,7 @@ test('an expanded shell row with no output says so', async ($, on) => {
   await row.unmount()
 })
 
-test('standalone tool rows keep the prismantis look', async $ => {
+test('standalone tool rows keep the prismantis look', { options: { toolStyle: 'chat' } }, async $ => {
   const ui = await $.ui.mount({
     plugin: 'bk-mod-prismantis',
     surface: 'terminal',
@@ -451,7 +451,7 @@ test('an unstamped prompt is yours, a teammate message is not', async ($, on) =>
 
 const readRow = { plugin: 'bk-mod-prismantis', component: 'ToolUse' as const, props: call('Read', { file_path: '/tmp/x' }, 'ts-1'), viewport: { columns: 100, rows: 10 }, surface: 'terminal' as const }
 
-test('chat puts tool rows on the right, lit, by default', async $ => {
+test('chat puts tool rows on the right, lit', { options: { toolStyle: 'chat' } }, async $ => {
   const ui = await $.ui.mount(readRow)
   expect((await ui.findAll({ type: 'Box' })).some(b => b.props.justifyContent === 'flex-end')).toBe(true)
   expect(await ui.find({ type: 'Text', text: /⎿/ })).toBeUndefined()
@@ -461,7 +461,7 @@ test('chat puts tool rows on the right, lit, by default', async $ => {
   await ui.unmount()
 })
 
-test('chat colors each kind of tool verb on its own', async $ => {
+test('chat colors each kind of tool verb on its own', { options: { toolStyle: 'chat' } }, async $ => {
   const rows: [string, unknown, RegExp, string | undefined][] = [
     ['Bash', { command: 'ls' }, /^Ran$/, t.codeCommand],
     ['WebSearch', { query: 'bidi', mode: 'standard' }, /^Searched the web for$/, t.link],
@@ -475,7 +475,7 @@ test('chat colors each kind of tool verb on its own', async $ => {
   }
 })
 
-test('a skill row names the skill and a group counts it', async $ => {
+test('a skill row names the skill and a group counts it', { options: { toolStyle: 'chat' } }, async $ => {
   const ui = await $.ui.mount({ ...readRow, props: call('Skill', { skill: 'bk-core:code-review', args: 'HEAD' }, 'sk-1') })
   expect(await ui.find({ type: 'Text', text: /^bk-core:code-review$/ })).toBeDefined()
   await ui.unmount()
@@ -503,4 +503,51 @@ test('toolStyle tree-bold draws one-line narration in bold', { options: { toolSt
   const long = await $.ui.mount({ plugin: 'bk-mod-prismantis', component: 'AssistantMessage', props: { text: 'First.\n\nSecond.', isFirstOfReply: true }, viewport: { columns: 80, rows: 10 }, surface: 'terminal' })
   expect((await long.find({ type: 'Text', text: /^First\.$/ }))?.props.bold).toBeFalsy()
   await long.unmount()
+})
+
+const shellRow = (command: string, output?: unknown, id = 'card-1') => ({ ...readRow, props: { ...call('Bash', { command }, id), ...(output === undefined ? {} : { output }) } })
+
+test('cards are the default: a status header, the full command, then a one-line result', async $ => {
+  const long = `git log --format='%h %an' ${'--author=khaledbk '.repeat(8)}| head -5`
+  const ui = await $.ui.mount(shellRow(long, { stdout: 'abc123 khaledbk\ndef456 khaledbk\n', stderr: '' }))
+  expect((await ui.find({ type: 'Text', text: /^COMMAND$/ }))?.props).toMatchObject({ bold: true, color: t.codeCommand })
+  expect(await ui.find({ type: 'Text', text: /^ {4}exec $/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /^❯ $/ })).toBeDefined()
+  for (const part of [/--author=khaledbk/, /^head$/, /^-5$/]) expect(await ui.find({ type: 'Text', text: part })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /^abc123 khaledbk {2}\(\+1 lines\)$/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('a long command wraps across card lines instead of being cut', async $ => {
+  const ui = await $.ui.mount({ ...shellRow(`echo ${'x'.repeat(250)}`), viewport: { columns: 80, rows: 10 } })
+  const bars = (await ui.findAll({ type: 'Text', text: /^│ $/ })).length
+  expect(bars).toBeGreaterThanOrEqual(4)
+  await ui.unmount()
+})
+
+test('a failed card says why in the result layer', async $ => {
+  const ui = await $.ui.mount({ ...readRow, props: { ...call('Bash', { command: 'false' }, 'card-2'), isErrored: true, output: 'Exit code 1\nboom' } })
+  expect(await ui.find({ type: 'Text', text: /^ {4}failed $/ })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: /^Exit code 1$/ }))?.props.color).toBe(t.codeFlag)
+  await ui.unmount()
+})
+
+test('file cards summarize the result', () => {
+  const base = { isRunning: false, isErrored: false, isInterrupted: false }
+  expect(toolResult({ ...base, tool: 'Read', input: {}, output: { type: 'text', file: { numLines: 40, startLine: 1 } } })?.text).toBe('40 lines')
+  expect(toolResult({ ...base, tool: 'Edit', input: {}, output: { structuredPatch: [{ lines: ['+a', '+b', '-c', ' d'] }] } })?.text).toBe('+2 -1 lines')
+  expect(toolResult({ ...base, tool: 'Bash', input: {}, output: { stdout: '', stderr: '' } })).toEqual({ text: 'No output', tone: 'dim' })
+  expect(toolResult({ ...base, isRunning: true, tool: 'Bash', input: {}, output: undefined })).toBeNull()
+})
+
+test('a collapsed group unfolds into one card per call, numbered by the timing hook', async ($, on) => {
+  engine(on)
+  on('tool.call', () => ({ result: 'ok' }) as any)
+  await $.tool.call({ tool: 'Bash', command: 'ls', tool_use_id: 'g-1' } as any)
+  await $.tool.call({ tool: 'Bash', command: 'pwd', tool_use_id: 'g-2' } as any)
+  const ui = await $.ui.mount({ plugin: 'bk-mod-prismantis', surface: 'terminal', component: 'ToolGroup', viewport: { columns: 100, rows: 20 }, props: { calls: [call('Bash', { command: 'ls' }, 'g-1'), call('Bash', { command: 'pwd' }, 'g-2')], isActive: false, isExpanded: false } })
+  expect(await ui.find({ type: 'Text', text: /^COMMAND 01$/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /^COMMAND 02$/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /^pwd$/ })).toBeDefined()
+  await ui.unmount()
 })

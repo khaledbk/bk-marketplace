@@ -1,6 +1,6 @@
 {
   "name": "bk-mod-prismantis",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Colorful, themeable rendering for replies: tables, headings, code, Mermaid diagrams, numbers, paths and links. BK fork of prismantis with full-width frames and centered figures.",
   "author": {
     "name": "BK Organization"
@@ -85,9 +85,10 @@
     "toolStyle": {
       "type": "string",
       "title": "Tool row style",
-      "description": "How tool rows (Ran, Read, Edited, Ran skill) sit next to Claude's sentences. chat: tool rows on the right with the verb bold in a color per kind (shell, file, search, web, skill or agent), Claude on the left. tree-dim: tucked under the sentence with ⎿ and dimmed. tree-bold: tree-dim plus one-line sentences in bold. classic: the original look.",
-      "default": "chat",
+      "description": "How tool calls draw. card: three layers per call, a status header (COMMAND 02, exec · 1.4s), the full command or target, and a one-line result; collapsed groups unfold into one card per call. chat: tool rows on the right with the verb bold in a color per kind (shell, file, search, web, skill or agent), Claude on the left. tree-dim: tucked under the sentence with ⎿ and dimmed. tree-bold: tree-dim plus one-line sentences in bold. classic: the original look.",
+      "default": "card",
       "options": [
+        "card",
         "chat",
         "tree-dim",
         "tree-bold",

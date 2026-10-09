@@ -189,7 +189,7 @@
       "source": "bk-mod-prismantis",
       "displayName": "BK Prismantis",
       "description": "Themed rendering for replies: tables, Mermaid diagrams, code, headings. Fork of prismantis with full-width frames and centered figures.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "BK Organization"
       },
@@ -208,7 +208,7 @@
       "source": "bk-mod-context",
       "displayName": "BK Context Meter",
       "description": "Full-width context meter above the prompt: real token fill, green-to-red heat bar with a glowing edge, model and effort beside it.",
-      "version": "1.0.6",
+      "version": "1.1.0",
       "author": {
         "name": "BK Organization"
       },
