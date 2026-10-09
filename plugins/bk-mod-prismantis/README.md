@@ -94,9 +94,9 @@ When tables and diagrams follow each other, they share a row and wrap to the nex
 
 Each tool call draws as one line: a bold verb and its target, `Ran` with a colored shell command, `Read` and `Edited` with the path. The dot is green when done, hollow while running and red on failure. Output still draws below. Collapsed groups draw one line too, `Ran 3 commands, read 2 files · last: npm test`, with a red count when any call failed. Expand a group (ctrl+o or `--verbose`) and its calls draw with Claude Code's own rows, inline output included.
 
-`toolStyle` keeps tool rows apart from what Claude says. The default, `chat`, puts them dimmed on the right, like the other side of a chat, and leaves Claude's sentences on the left. Rows are capped at 60% of the width.
+`toolStyle` keeps tool rows apart from what Claude says. The default, `chat`, puts them on the right, like the other side of a chat, with the verb bold in a color per kind (shell, file, search, web, skill or agent) and the target in its own color, and leaves Claude's sentences on the left. Rows are capped at 60% of the width.
 
-![chat: tool rows dimmed on the right](https://raw.githubusercontent.com/NahumLitvin/prismantis/9900aaa3aeb31ac728639f692a38354ce89949da/docs/tools/chat.png)
+![chat: tool rows on the right (upstream screenshot, dimmed)](https://raw.githubusercontent.com/NahumLitvin/prismantis/9900aaa3aeb31ac728639f692a38354ce89949da/docs/tools/chat.png)
 
 `tree-dim` tucks them under the sentence with `⎿` and dims them.
 

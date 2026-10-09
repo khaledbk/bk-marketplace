@@ -601,7 +601,19 @@ export type ToolRow = { tool: string; input: unknown; isRunning: boolean; isErro
 const VERBS: Record<string, string> = {
   Bash: 'Ran', PowerShell: 'Ran', Read: 'Read', Write: 'Wrote', Edit: 'Edited', MultiEdit: 'Edited', NotebookEdit: 'Edited',
   Grep: 'Searched', Glob: 'Listed', WebFetch: 'Fetched', WebSearch: 'Searched the web for', Agent: 'Delegated', Task: 'Delegated',
+  Skill: 'Ran skill', Workflow: 'Ran workflow', ToolSearch: 'Loaded tools',
 }
+
+const VERB_COLORS: [RegExp, keyof Theme][] = [
+  [/^(Bash|PowerShell)$/, 'codeCommand'],
+  [/^(Read|Write|Edit|MultiEdit|NotebookEdit)$/, 'heading'],
+  [/^(Grep|Glob|ToolSearch)$/, 'number'],
+  [/^(WebFetch|WebSearch)$/, 'link'],
+]
+
+const verbColor = (style: Style, tool: string) => style.theme[VERB_COLORS.find(([re]) => re.test(tool))?.[1] ?? 'accent']
+
+const TARGET_KEYS = ['file_path', 'notebook_path', 'path', 'pattern', 'url', 'query', 'skill', 'name', 'description'] as const
 
 const field = (input: unknown, ...keys: string[]): string | undefined => {
   if (input === null || typeof input !== 'object') return undefined
@@ -612,7 +624,7 @@ const field = (input: unknown, ...keys: string[]): string | undefined => {
   return undefined
 }
 
-const toolDim = (style: Style) => style.toolStyle !== "classic"
+const toolDim = (style: Style) => style.toolStyle.startsWith('tree')
 
 const toolGutter = ({ Box, Text }: ElementTable, style: Style, color: string | undefined, running: boolean) =>
   style.toolStyle.startsWith("tree")
@@ -637,14 +649,15 @@ export const renderToolRow = (el: ElementTable, style: Style, row: ToolRow, colu
   const verb = VERBS[row.tool] ?? row.tool.replace(/^mcp__([^_]+)__/, '$1 ')
   const target = isShell
     ? field(row.input, 'command')?.split('\n')[0]
-    : field(row.input, 'file_path', 'notebook_path', 'path', 'pattern', 'url', 'query', 'description')
+    : field(row.input, ...TARGET_KEYS)
   const dot = row.isErrored ? t.codeFlag : row.isInterrupted ? t.codeComment : row.isRunning ? t.accent : t.number
   const isPath = target !== undefined && /^(~|\.{0,2}\/|[A-Za-z]:\\)/.test(target)
 
   const label = `${verb}${target === undefined ? "" : ` ${target}`}${row.isInterrupted ? " interrupted" : row.isErrored ? " failed" : ""}`
+  const lit = style.toolStyle === 'chat'
   return toolLayout(el, style, columns, label, dot, row.isRunning, (
       <Text wrap="truncate-end" dimColor={toolDim(style)}>
-        <Text bold={!toolDim(style)} dimColor={toolDim(style)}>{verb}</Text>
+        <Text bold={!toolDim(style)} dimColor={toolDim(style)} color={lit ? verbColor(style, row.tool) : undefined}>{verb}</Text>
         {target === undefined ? null : <Text> </Text>}
         {target === undefined ? null : isShell ? codeLine(el, style, target, 'bash', 'cmd') : <Text color={isPath ? t.path : t.inlineCode} dimColor={toolDim(style)}>{target}</Text>}
         {row.isInterrupted ? <Text dimColor> interrupted</Text> : row.isErrored ? <Text color={t.codeFlag}> failed</Text> : null}
@@ -701,6 +714,8 @@ const GROUPS: [RegExp, string, string][] = [
   [/^(Grep|Glob)$/, 'searched', 'pattern'],
   [/^(WebFetch|WebSearch)$/, 'fetched', 'page'],
   [/^(Agent|Task)$/, 'delegated', 'task'],
+  [/^Skill$/, 'ran', 'skill'],
+  [/^Workflow$/, 'ran', 'workflow'],
 ]
 
 export const groupSummary = (calls: readonly { tool: string }[]): string => {
@@ -726,13 +741,14 @@ export const renderToolGroup = (el: ElementTable, style: Style, calls: readonly 
   const running = isActive && calls.some(c => c.isRunning)
   const dot = failed ? t.codeFlag : running ? t.accent : t.number
   const last = calls[calls.length - 1]
-  const lastTarget = last ? field(last.input, 'command', 'file_path', 'notebook_path', 'path', 'pattern', 'url', 'query', 'description')?.split('\n')[0] : undefined
+  const lastTarget = last ? field(last.input, 'command', ...TARGET_KEYS)?.split('\n')[0] : undefined
   const label = `${groupSummary(calls)}${failed ? ` · ${failed} failed` : ""}${lastTarget ? ` · last: ${lastTarget}` : ""}`
   return toolLayout(el, style, columns, label, dot, running, (
       <Text wrap="truncate-end" dimColor={toolDim(style)}>
-        <Text bold={!toolDim(style)} dimColor={toolDim(style)}>{groupSummary(calls)}</Text>
+        <Text bold={!toolDim(style)} dimColor={toolDim(style)} color={style.toolStyle === 'chat' ? t.accent : undefined}>{groupSummary(calls)}</Text>
         {failed ? <Text color={t.codeFlag}>{` · ${failed} failed`}</Text> : null}
-        {lastTarget ? <Text dimColor>{` · last: ${lastTarget}`}</Text> : null}
+        {lastTarget ? <Text dimColor>{' · last: '}</Text> : null}
+        {lastTarget ? <Text dimColor={style.toolStyle !== 'chat'} color={style.toolStyle === 'chat' ? t.inlineCode : undefined}>{lastTarget}</Text> : null}
       </Text>
   ))
 }
