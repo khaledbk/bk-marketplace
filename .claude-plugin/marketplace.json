@@ -208,7 +208,7 @@
       "source": "bk-mod-context",
       "displayName": "BK Context Meter",
       "description": "Full-width context meter above the prompt: real token fill, green-to-red heat bar with a glowing edge, model and effort beside it.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "BK Organization"
       },
