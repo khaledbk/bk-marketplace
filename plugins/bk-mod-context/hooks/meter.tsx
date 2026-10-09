@@ -123,16 +123,21 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
     }
   }
 
+  // The labels never shrink; a width the surface reports a few cells off only trims the bar.
   return (
     <Box flexDirection="row" height={1} overflow="hidden">
-      <Text>{cells}</Text>
-      <Text> </Text>
-      <Text bold color={heat}>{percent}</Text>
-      <Text color={props.dim}>{`  ${amount}  `}</Text>
-      <Text color={props.headColor}>{props.head}</Text>
-      <Text bold color={props.text}>{` ${props.model}`}</Text>
-      {props.effort ? <Text color={props.dim}> · </Text> : null}
-      {props.effort ? <Text bold color={props.effortColor}>{props.effort}</Text> : null}
+      <Box flexGrow={1} flexShrink={1} overflow="hidden">
+        <Text wrap="truncate-end">{cells}</Text>
+      </Box>
+      <Box flexShrink={0} flexDirection="row">
+        <Text> </Text>
+        <Text bold color={heat}>{percent}</Text>
+        <Text color={props.dim}>{`  ${amount}  `}</Text>
+        <Text color={props.headColor}>{props.head}</Text>
+        <Text bold color={props.text}>{` ${props.model}`}</Text>
+        {props.effort ? <Text color={props.dim}> · </Text> : null}
+        {props.effort ? <Text bold color={props.effortColor}>{props.effort}</Text> : null}
+      </Box>
     </Box>
   )
 }
