@@ -451,12 +451,35 @@ test('an unstamped prompt is yours, a teammate message is not', async ($, on) =>
 
 const readRow = { plugin: 'bk-mod-prismantis', component: 'ToolUse' as const, props: call('Read', { file_path: '/tmp/x' }, 'ts-1'), viewport: { columns: 100, rows: 10 }, surface: 'terminal' as const }
 
-test('chat puts tool rows on the right, dimmed, by default', async $ => {
+test('chat puts tool rows on the right, lit, by default', async $ => {
   const ui = await $.ui.mount(readRow)
   expect((await ui.findAll({ type: 'Box' })).some(b => b.props.justifyContent === 'flex-end')).toBe(true)
   expect(await ui.find({ type: 'Text', text: /⎿/ })).toBeUndefined()
-  expect((await ui.findAll({ type: 'Text' })).find(t => t.props.wrap === 'truncate-end')?.props.dimColor).toBe(true)
+  expect((await ui.findAll({ type: 'Text' })).find(t => t.props.wrap === 'truncate-end')?.props.dimColor).toBe(false)
+  expect((await ui.find({ type: 'Text', text: /^Read$/ }))?.props).toMatchObject({ bold: true, color: t.heading })
+  expect((await ui.find({ type: 'Text', text: /^\/tmp\/x$/ }))?.props).toMatchObject({ dimColor: false, color: t.path })
   await ui.unmount()
+})
+
+test('chat colors each kind of tool verb on its own', async $ => {
+  const rows: [string, unknown, RegExp, string | undefined][] = [
+    ['Bash', { command: 'ls' }, /^Ran$/, t.codeCommand],
+    ['WebSearch', { query: 'bidi', mode: 'standard' }, /^Searched the web for$/, t.link],
+    ['Grep', { pattern: 'TODO' }, /^Searched$/, t.number],
+    ['Skill', { skill: 'bk-core:code-review' }, /^Ran skill$/, t.accent],
+  ]
+  for (const [tool, input, verb, color] of rows) {
+    const ui = await $.ui.mount({ ...readRow, props: call(tool, input, `kind-${tool}`) })
+    expect((await ui.find({ type: 'Text', text: verb }))?.props).toMatchObject({ bold: true, color })
+    await ui.unmount()
+  }
+})
+
+test('a skill row names the skill and a group counts it', async $ => {
+  const ui = await $.ui.mount({ ...readRow, props: call('Skill', { skill: 'bk-core:code-review', args: 'HEAD' }, 'sk-1') })
+  expect(await ui.find({ type: 'Text', text: /^bk-core:code-review$/ })).toBeDefined()
+  await ui.unmount()
+  expect(groupSummary([{ tool: 'Skill' }, { tool: 'Bash' }, { tool: 'Workflow' }])).toBe('Ran 1 skill, ran 1 command, ran 1 workflow')
 })
 
 test('toolStyle tree-dim tucks tool rows under the sentence', { options: { toolStyle: 'tree-dim' } }, async $ => {
