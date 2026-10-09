@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "bk-mod-context",
   "displayName": "BK Context Meter",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Full-width context meter above the prompt: real token fill from the API, a green-to-red heat bar with a glowing leading edge, and the model and effort beside it.",
   "author": {
     "name": "BK Organization",

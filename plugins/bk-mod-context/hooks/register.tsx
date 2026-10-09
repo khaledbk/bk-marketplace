@@ -48,9 +48,13 @@ async function effortOf($: EngineInterface): Promise<string> {
 async function measure($: EngineInterface, context?: SessionContextUsage): Promise<void> {
   const fill = fillOf(context ?? (await $.session.usage()).context)
   await update($, FILL, () => fill)
-  const model = await $.session.model()
   const effort = await effortOf($)
-  await update($, SETTING, (setting): ModelSetting => ({ model, effort: effort || setting.effort }))
+  await update($, SETTING, (setting): ModelSetting => ({ ...setting, effort: effort || setting.effort }))
+}
+
+// $.session.model() follows the next request, not a /model switch, so it only seeds the label.
+async function noteModel($: EngineInterface, model: string): Promise<void> {
+  if (model) await update($, SETTING, setting => (setting.model === model ? setting : { ...setting, model }))
 }
 
 // Claude Code stamps the applied effort on these hook inputs; a model request may carry none.
@@ -66,6 +70,7 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     const started = await next(e)
     await measure($).catch(() => undefined)
+    await noteModel($, await $.session.model()).catch(() => undefined)
     return started
   })
 
@@ -74,10 +79,13 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  // A /model switch sends no request, so without this the label waits for the next prompt.
+  // A /model switch sends no request, so the switch itself names the new model.
   on('classic.PostModelSwitch', async ($, e, next) => {
     const switched = await next(e)
-    if (!e.agent_id) await measure($).catch(() => undefined)
+    if (!e.agent_id) {
+      await noteModel($, e.to_model).catch(() => undefined)
+      await measure($).catch(() => undefined)
+    }
     return switched
   })
 
@@ -96,6 +104,7 @@ export const register: Register = (on, options) => {
     const response = yield* next(e)
     // The request carries the effort the session actually sends, which no config row names reliably.
     const effort = typeof e.effort === 'string' ? e.effort : ''
+    if (!e.agentId) await noteModel($, e.model)
     if (!e.agentId && effort) await update($, SETTING, setting => (setting.effort === effort ? setting : { ...setting, effort }))
     if (!e.agentId && response.usage) {
       const used = response.usage.input_tokens + response.usage.cache_read_input_tokens + response.usage.cache_creation_input_tokens + response.usage.output_tokens
