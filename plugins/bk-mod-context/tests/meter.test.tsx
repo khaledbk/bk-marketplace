@@ -184,9 +184,10 @@ test('before any request the effort comes from the managed settings file', async
 })
 
 test('a model switch redraws the model and the window before the next prompt', async ($, on) => {
-  let model = 'claude-opus-5-5[1m]'
+  const model = 'claude-opus-5-5[1m]'
   let window = 1_000_000
   on('session.start', (_$, e) => ({ cwd: e.cwd }) as any)
+  on('session.measure', (_$, e) => ({ changed: e.changed }) as any)
   on('ui.render', ($, e) => {
     const { Text } = $.ui.resolve(e)
     return <Text>engine band</Text>
@@ -198,12 +199,30 @@ test('a model switch redraws the model and the window before the next prompt', a
   await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
   const ui = await $.ui.mount(band())
   expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('Opus 5.5 1M')
-  model = 'claude-sonnet-5-5'
+  // The engine's own model answer stays on the old model until the next request.
   window = 200_000
-  await $.classic.PostModelSwitch({ from_model: 'claude-opus-5-5[1m]', to_model: model, requested_model: 'sonnet', source: 'command' } as any)
-  const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
+  await $.classic.PostModelSwitch({ from_model: 'claude-opus-5-5[1m]', to_model: 'claude-sonnet-5-5', requested_model: 'sonnet', source: 'command' } as any)
+  let drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
   expect(drawn).toContain('Sonnet 5.5')
   expect(drawn).toContain('40K/200K')
   expect(drawn).not.toContain('Opus')
+  await $.session.measure({ context: { tokens: 41_000, window, percent: 20 }, rateLimits: [], changed: ['context'] } as any)
+  drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
+  expect(drawn).toContain('Sonnet 5.5')
+  expect(drawn).not.toContain('Opus')
+  await ui.unmount()
+})
+
+test('the model a request names replaces the label', async ($, on) => {
+  world(on, { tokens: 10_000, window: 1_000_000, percent: 1 }, 'claude-opus-5-5', 'high')
+  on('turn.step', async function* () {
+    return { turnId: 't', index: 0, answer: '', toolUses: [], stopReason: 'end_turn', usage: { model: 'claude-fable-5-1', input_tokens: 1, output_tokens: 1, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as any
+  } as any)
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  const step = $.turn.step({ turnId: 't', index: 0, model: 'claude-fable-5-1', effort: 'high', messageCount: 1 } as any) as any
+  for await (const _ of step) void _
+  await step.result
+  expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('Fable 5.1')
   await ui.unmount()
 })
