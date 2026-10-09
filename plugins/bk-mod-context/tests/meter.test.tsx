@@ -81,3 +81,33 @@ test('a survey keeps the band to itself', async ($, on) => {
   expect(await ui.find({ type: 'Text', text: 'engine band' })).toBeDefined()
   await ui.unmount()
 })
+
+test('the effort comes from the live request and survives a measurement that cannot name it', async ($, on) => {
+  world(on, { tokens: 10_000, window: 1_000_000, percent: 1 }, 'claude-opus-5-5', '')
+  on('turn.step', async function* () {
+    return { turnId: 't', index: 0, answer: '', toolUses: [], stopReason: 'end_turn', usage: { model: 'claude-opus-5-5', input_tokens: 1, output_tokens: 1, cache_read_input_tokens: 20_000, cache_creation_input_tokens: 0 } } as any
+  } as any)
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  const step = $.turn.step({ turnId: 't', index: 0, model: 'claude-opus-5-5', effort: 'xhigh', messageCount: 1 } as any) as any
+  for await (const _ of step) void _
+  await step.result
+  await $.session.measure({ context: { tokens: 20_002, window: 1_000_000, percent: 2 }, rateLimits: [], changed: ['context'] } as any)
+  const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
+  expect(drawn).toContain('xhigh')
+  expect(drawn).toContain('20K/1M')
+  await ui.unmount()
+})
+
+for (const tokens of [0, 500_000, 1_000_000]) {
+  test(`the bulb is three cells wide at ${tokens} tokens`, async ($, on) => {
+    world(on, { tokens, window: 1_000_000, percent: tokens / 10_000 })
+    await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+    const ui = await $.ui.mount(band())
+    const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
+    expect(drawn).toContain(String.fromCodePoint(0xe0b6))
+    expect(drawn).toContain('█')
+    expect(drawn).toContain(String.fromCodePoint(0xe0b4))
+    await ui.unmount()
+  })
+}

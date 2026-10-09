@@ -26,14 +26,15 @@ async function effortOf($: EngineInterface): Promise<string> {
   } catch {
     // A host without a config menu still has the variable the engine exports.
   }
-  return (await $.env.get('CLAUDE_EFFORT')) ?? ''
+  return (await $.env.get('CLAUDE_EFFORT').catch(() => undefined)) ?? ''
 }
 
 async function measure($: EngineInterface, context?: SessionContextUsage): Promise<void> {
   const fill = fillOf(context ?? (await $.session.usage()).context)
   await update($, FILL, () => fill)
-  const setting: ModelSetting = { model: await $.session.model(), effort: await effortOf($) }
-  await update($, SETTING, () => setting)
+  const model = await $.session.model()
+  const effort = await effortOf($)
+  await update($, SETTING, (setting): ModelSetting => ({ model, effort: effort || setting.effort }))
 }
 
 export const register: Register = (on, options) => {
@@ -54,6 +55,11 @@ export const register: Register = (on, options) => {
   // Moves the bar after every model response of the main loop, not only when the turn ends.
   on('turn.step', async function* ($, e, next) {
     const response = yield* next(e)
+    // The request carries the effort the session actually sends, which no config row names reliably.
+    if (!e.agentId && e.effort !== undefined) {
+      const effort = String(e.effort)
+      await update($, SETTING, setting => (setting.effort === effort ? setting : { ...setting, effort }))
+    }
     if (!e.agentId && response.usage) {
       const used = response.usage.input_tokens + response.usage.cache_read_input_tokens + response.usage.cache_creation_input_tokens + response.usage.output_tokens
       await update($, FILL, fill => ({ ...fill, tokens: used, isKnown: true }))
