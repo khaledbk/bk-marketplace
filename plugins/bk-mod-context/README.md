@@ -3,15 +3,14 @@
 A one-row context meter across the full width of the band above the prompt.
 
 ```
-████████████████████████◜●◞████████████████████████ 41%  412K/1M  ▐▛███▜▌ Opus 5.5 1M · high
+███████████████████████████████████████████████████ 41%  412K/1M  ▐▛███▜▌ Opus 5.5 1M · high
 ```
 
 | Part | Source | Behaviour |
 | :-- | :-- | :-- |
 | Fill | Tokens the last API response was answered over, after every main-loop model response and every `session.measure` | Real counts from the API, not an estimate; `--%` until the first response |
 | Heat | Token position along the window | Green up to `greenUntil` (380K), then lime, yellow, orange, red at the full window; 40% of the window on windows under 2.5 times the threshold |
-| Bar | Heat along the window | A full-height pill between two rounded caps: the filled part carries the heat gradient with a light wave flowing toward the ball; past the ball the track is a dim tint of the same gradient |
-| Ball | Heat at the current fill | A flickering `●` on the bar inside a two-arc ring (`◜ ◞`, then `◟ ◝`) that turns every three frames; an advance swells the wave for ten frames |
+| Bar | Heat along the window | A full-height block with square ends: the filled part carries the heat gradient with a light wave flowing toward its edge, and an advance swells the wave for ten frames; the unreached track is a faint 12% tint of the same gradient |
 | Model mark | `$.session.model()` | One head per family: Haiku `▐▛▜▌` mint, Sonnet `▐▛█▜▌` blue, Opus `▐▛███▜▌` clay, Fable `▟▛███▜▙` violet |
 | Effort | The `effort.level` Claude Code stamps on the main thread's `Stop` and `PostToolUse` hook input; a model request's own effort or a config row naming effort when present |
 
