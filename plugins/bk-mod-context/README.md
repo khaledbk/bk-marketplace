@@ -10,7 +10,7 @@ A one-row context meter across the full width of the band above the prompt.
 | :-- | :-- | :-- |
 | Fill | Tokens the last API response was answered over, after every main-loop model response and every `session.measure` | Real counts from the API, not an estimate; `--%` until the first response |
 | Heat | Token position along the window | Green up to `greenUntil` (380K), then lime, yellow, orange, red at the full window; 40% of the window on windows under 2.5 times the threshold |
-| Leading edge | Heat at the current fill | A one-cell ball whose core flickers between the heat color and flame yellow, followed by a thin pulse four cells long whose brightness breathes while its width stays fixed; a light sweeps the bar each time it advances |
+| Leading edge | Heat at the current fill | A rounded left cap and a square core that flickers between the heat color and flame yellow, running straight into a four-cell `▓▓▒░` pulse whose brightness breathes while its width stays fixed; a light sweeps the bar each time it advances |
 | Model mark | `$.session.model()` | One head per family: Haiku `▐▛▜▌` mint, Sonnet `▐▛█▜▌` blue, Opus `▐▛███▜▌` clay, Fable `▟▛███▜▙` violet |
 | Effort | The `effort.level` Claude Code stamps on the main thread's `Stop` and `PostToolUse` hook input; a model request's own effort or a config row naming effort when present |
 

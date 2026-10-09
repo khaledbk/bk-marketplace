@@ -100,17 +100,18 @@ test('the effort comes from the live request and survives a measurement that can
 })
 
 for (const tokens of [0, 500_000, 1_000_000]) {
-  test(`the ball is one cell with a thin pulse after it at ${tokens} tokens`, async ($, on) => {
+  test(`the head is a rounded cap and a square core, then a four-cell pulse, at ${tokens} tokens`, async ($, on) => {
     world(on, { tokens, window: 1_000_000, percent: tokens / 10_000 })
     await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
     const ui = await $.ui.mount(band())
     const meter = (await ui.drawn({ in: 'meter' })) as any
-    const bar = meter.children[0].children[0].children.map((c: any) => c.children[0]).join('')
-    expect([...bar].filter(ch => ch === '●').length).toBe(1)
-    expect(bar).not.toContain(String.fromCodePoint(0xe0b6))
-    const ball = [...bar].indexOf('●')
-    if (ball < [...bar].length - 1) expect([...bar][ball + 1]).toBe('╸')
-    expect([...bar].slice(ball + 2).every(ch => ch === '─')).toBe(true)
+    const bar = [...meter.children[0].children[0].children.map((c: any) => c.children[0]).join('')]
+    const cap = bar.indexOf(String.fromCodePoint(0xe0b6))
+    expect(bar.filter(ch => ch === String.fromCodePoint(0xe0b6)).length).toBe(1)
+    expect(bar).not.toContain(String.fromCodePoint(0xe0b4))
+    expect(bar[cap + 1]).toBe('█')
+    expect(bar.slice(cap + 2, cap + 6).join('')).toBe('▓▓▒░'.slice(0, Math.max(0, bar.length - cap - 2)))
+    expect(bar.slice(cap + 6).every(ch => ch === '─')).toBe(true)
     await ui.unmount()
   })
 }
