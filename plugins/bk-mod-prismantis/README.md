@@ -94,7 +94,7 @@ When tables and diagrams follow each other, they share a row and wrap to the nex
 
 Each tool call draws as one line: a bold verb and its target, `Ran` with a colored shell command, `Read` and `Edited` with the path. The dot is green when done, hollow while running and red on failure. Output still draws below. Collapsed groups draw one line too, `Ran 3 commands, read 2 files · last: npm test`, with a red count when any call failed. Expand a group (ctrl+o or `--verbose`) and its calls draw with Claude Code's own rows, inline output included.
 
-`toolStyle` keeps tool rows apart from what Claude says. The default, `chat`, puts them on the right, like the other side of a chat, with the verb bold in a color per kind (shell, file, search, web, skill or agent) and the target in its own color, and leaves Claude's sentences on the left. Rows are capped at 60% of the width.
+`toolStyle` keeps tool rows apart from what Claude says. The default, `card`, draws each call in three layers: a status header (`● COMMAND 02    exec · 1.4s ───`), the full command or target on `│ ❯` lines that wrap instead of being cut (eight lines, then `… +N lines`), and a one-line result (first output line, line counts, `+added -removed`, HTTP status or the error). Collapsed groups unfold into one card per call. `chat` puts them on the right, like the other side of a chat, with the verb bold in a color per kind (shell, file, search, web, skill or agent) and the target in its own color, and leaves Claude's sentences on the left. Rows are capped at 60% of the width.
 
 ![chat: tool rows on the right (upstream screenshot, dimmed)](https://raw.githubusercontent.com/NahumLitvin/prismantis/9900aaa3aeb31ac728639f692a38354ce89949da/docs/tools/chat.png)
 
@@ -207,7 +207,7 @@ Open `/config` and look for the **prismantis** rows, or set values in `~/.claude
 | `highlightNumbers` | `true`, `false` | `true` |
 | `highlightPaths` | `true`, `false` | `true` |
 | `toolRows` | `true`, `false` | `true` |
-| `toolStyle` | `chat`, `tree-dim`, `tree-bold`, `classic` | `chat` |
+| `toolStyle` | `card`, `chat`, `tree-dim`, `tree-bold`, `classic` | `card` |
 | `copyButtons` | `true`, `false` | `true` |
 | `diagramHints` | `true`, `false` | `true` |
 | `rtl` | `auto`, a terminal (`warp`, `kitty`, `apple-terminal`, `iterm`, `ghostty`, `wezterm`, `vscode`, `alacritty`, `windows-terminal`, `gnome`, `konsole`), `off` | `auto` |

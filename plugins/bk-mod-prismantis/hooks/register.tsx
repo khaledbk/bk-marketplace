@@ -3,7 +3,8 @@ import type { EngineInterface, Register, RenderElement } from 'claude-code'
 import { parse } from './markdown'
 import { boxArt, mermaidText } from './mermaid'
 import type { Drawn } from './render'
-import { remember, renderBlocks, renderExpandedShell, renderToolGroup, renderToolRow, renderTurnDuration, renderUserPrompt, width } from './render'
+import type { ToolRun } from './render'
+import { remember, renderBlocks, renderExpandedShell, renderToolGroup, renderToolRow, renderTurnDuration, renderUserPrompt, toolKind, width } from './render'
 import { helpText, rtlShowcaseText, showcaseText } from './help'
 import { PRESET_NAMES } from './presets'
 import type { Style } from './theme'
@@ -91,15 +92,30 @@ export const register: Register = (on, options) => {
   const fit = (viewport?: { isFullscreen?: boolean }): Style => (terminal === 'apple-terminal' && viewport?.isFullscreen ? { ...style, shape: 'inverse' } : style)
 
   if (options.toolRows !== false) {
+    const runs = new Map<string, ToolRun>()
+    const counts = new Map<string, number>()
+    on('tool.call', async ($, e, next) => {
+      const id = e.tool_use_id
+      if (!id) return next(e)
+      const label = toolKind(e.tool).label
+      const index = (counts.get(label) ?? 0) + 1
+      counts.set(label, index)
+      if (runs.size >= 2000) runs.delete(runs.keys().next().value!)
+      runs.set(id, { index })
+      const started = await $.clock.now()
+      const ran = await next(e)
+      runs.set(id, { index, ms: (await $.clock.now()) - started })
+      return ran
+    })
     on('ui.render', { component: 'ToolGroup' }, ($, e, next) => {
       if (e.props.isExpanded) {
         for (const call of e.props.calls) if (call.tool_use_id) expandedCalls.add(call.tool_use_id)
         return next(e)
       }
-      return renderToolGroup($.ui.resolve(e), fit(e.viewport), e.props.calls, e.props.isActive, e.viewport?.columns)
+      return renderToolGroup($.ui.resolve(e), fit(e.viewport), e.props.calls, e.props.isActive, e.viewport?.columns, runs)
     })
     on('ui.render', { component: 'ToolUse' }, ($, e, next) => {
-      if (!expandedCalls.has(e.props.tool_use_id)) return renderToolRow($.ui.resolve(e), fit(e.viewport), e.props, e.viewport?.columns)
+      if (!expandedCalls.has(e.props.tool_use_id)) return renderToolRow($.ui.resolve(e), fit(e.viewport), e.props, e.viewport?.columns, runs.get(e.props.tool_use_id))
       return e.props.tool === 'Bash' || e.props.tool === 'PowerShell' ? renderExpandedShell($.ui.resolve(e), fit(e.viewport), e.props) : next(e)
     })
   }

@@ -57,7 +57,7 @@ Scroll up: what you typed draws in a bubble. \`promptStyle\` switches to \`bar\`
 
 ### Tool rows
 
-Tool calls draw as one line, dimmed on the right by default. Set \`toolStyle\` in \`/config\` to \`chat\`, \`tree-dim\`, \`tree-bold\` or \`classic\`.
+Tool calls draw as cards by default: a status header, the full command and a one-line result. Set \`toolStyle\` in \`/config\` to \`card\`, \`chat\`, \`tree-dim\`, \`tree-bold\` or \`classic\`.
 
 ### Quotes and rules
 

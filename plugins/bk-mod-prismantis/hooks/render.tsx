@@ -604,14 +604,24 @@ const VERBS: Record<string, string> = {
   Skill: 'Ran skill', Workflow: 'Ran workflow', ToolSearch: 'Loaded tools',
 }
 
-const VERB_COLORS: [RegExp, keyof Theme][] = [
-  [/^(Bash|PowerShell)$/, 'codeCommand'],
-  [/^(Read|Write|Edit|MultiEdit|NotebookEdit)$/, 'heading'],
-  [/^(Grep|Glob|ToolSearch)$/, 'number'],
-  [/^(WebFetch|WebSearch)$/, 'link'],
+const KINDS: [RegExp, string, string, keyof Theme][] = [
+  [/^(Bash|PowerShell)$/, 'COMMAND', 'exec', 'codeCommand'],
+  [/^Read$/, 'READ', 'file', 'heading'],
+  [/^(Write|Edit|MultiEdit|NotebookEdit)$/, 'EDIT', 'file', 'heading'],
+  [/^(Grep|Glob)$/, 'SEARCH', 'files', 'number'],
+  [/^ToolSearch$/, 'TOOLS', 'load', 'number'],
+  [/^(WebFetch|WebSearch)$/, 'WEB', 'net', 'link'],
+  [/^Skill$/, 'SKILL', 'skill', 'accent'],
+  [/^Workflow$/, 'WORKFLOW', 'agents', 'accent'],
+  [/^(Agent|Task)$/, 'AGENT', 'agent', 'accent'],
 ]
 
-const verbColor = (style: Style, tool: string) => style.theme[VERB_COLORS.find(([re]) => re.test(tool))?.[1] ?? 'accent']
+export const toolKind = (tool: string): { label: string; meta: string; token: keyof Theme } => {
+  const k = KINDS.find(([re]) => re.test(tool))
+  return k ? { label: k[1], meta: k[2], token: k[3] } : { label: tool.replace(/^mcp__([^_]+)__/, '$1 ').toUpperCase(), meta: 'tool', token: 'accent' }
+}
+
+const verbColor = (style: Style, tool: string) => style.theme[toolKind(tool).token]
 
 const TARGET_KEYS = ['file_path', 'notebook_path', 'path', 'pattern', 'url', 'query', 'skill', 'name', 'description'] as const
 
@@ -642,7 +652,120 @@ const toolLayout = (el: ElementTable, style: Style, columns: number, label: stri
   )
 }
 
-export const renderToolRow = (el: ElementTable, style: Style, row: ToolRow, columns = 100): RenderElement => {
+const OUTPUT_LINES = 120
+
+const lines = (value: unknown): string[] => (typeof value === 'string' && value !== '' ? value.replace(/\n$/, '').split('\n') : [])
+
+export type ToolRun = { index?: number; ms?: number }
+
+const CARD_LINES = 8
+
+const hardWrap = (text: string, max: number): string[] => {
+  const out: string[] = []
+  let cur = ''
+  let used = 0
+  for (const ch of text) {
+    const w = width(ch)
+    if (used + w > max && cur) {
+      out.push(cur)
+      cur = ''
+      used = 0
+    }
+    cur += ch
+    used += w
+  }
+  out.push(cur)
+  return out
+}
+
+const firstLine = (value: unknown): string | undefined => (typeof value === 'string' ? value.split('\n').find(l => l.trim() !== '')?.trim() : undefined)
+
+export const elapsed = (ms: number): string => (ms < 60_000 ? `${(ms / 1000).toFixed(1)}s` : formatDuration(ms))
+
+export const toolResult = (row: ToolRow & { output?: unknown }): { text: string; tone: 'ok' | 'bad' | 'dim' } | null => {
+  if (row.isRunning) return null
+  if (row.isInterrupted) return { text: 'Interrupted', tone: 'dim' }
+  const out = row.output
+  const o = out !== null && typeof out === 'object' ? (out as Record<string, unknown>) : {}
+  if (row.isErrored) return { text: firstLine(out) ?? firstLine(o.stderr) ?? firstLine(o.error) ?? 'Failed', tone: 'bad' }
+  if (row.tool === 'Bash' || row.tool === 'PowerShell') {
+    const shown = lines(o.stdout).filter(l => l.trim() !== '')
+    if (shown.length === 0) return firstLine(o.stderr) ? { text: firstLine(o.stderr)!, tone: 'dim' } : { text: 'No output', tone: 'dim' }
+    return { text: `${shown[0]!.trim()}${shown.length > 1 ? `  (+${shown.length - 1} lines)` : ''}`, tone: 'ok' }
+  }
+  const file = o.file !== null && typeof o.file === 'object' ? (o.file as Record<string, unknown>) : undefined
+  if (row.tool === 'Read' && typeof file?.numLines === 'number') {
+    const from = typeof file.startLine === 'number' && file.startLine > 1 ? ` from line ${file.startLine}` : ''
+    return { text: `${file.numLines} lines${from}`, tone: 'ok' }
+  }
+  if (Array.isArray(o.structuredPatch)) {
+    const all = (o.structuredPatch as { lines?: unknown }[]).flatMap(h => (Array.isArray(h.lines) ? (h.lines as unknown[]) : []))
+    const added = all.filter(l => typeof l === 'string' && l.startsWith('+')).length
+    const removed = all.filter(l => typeof l === 'string' && l.startsWith('-')).length
+    return { text: o.type === 'create' ? `created, ${lines(o.content).length} lines` : `+${added} -${removed} lines`, tone: 'ok' }
+  }
+  if (typeof o.code === 'number') return { text: `${o.code} ${typeof o.codeText === 'string' ? o.codeText : ''}`.trim(), tone: o.code < 400 ? 'ok' : 'bad' }
+  if (Array.isArray(o.results)) {
+    const hits = (o.results as unknown[]).flatMap(r => (r !== null && typeof r === 'object' && Array.isArray((r as { content?: unknown }).content) ? ((r as { content: unknown[] }).content) : []))
+    return { text: `${hits.length} results`, tone: 'ok' }
+  }
+  return null
+}
+
+const cardTarget = (row: ToolRow): string | undefined => {
+  if (row.tool === 'Bash' || row.tool === 'PowerShell') return field(row.input, 'command')
+  if (row.tool === 'Skill') {
+    const args = field(row.input, 'args')
+    return [field(row.input, 'skill'), args].filter(Boolean).join(' ') || undefined
+  }
+  return field(row.input, ...TARGET_KEYS)
+}
+
+export const renderToolCard = (el: ElementTable, style: Style, row: ToolRow & { output?: unknown }, columns = 100, run: ToolRun = {}): RenderElement => {
+  const { Box, Text } = el
+  const t = style.theme
+  const kind = toolKind(row.tool)
+  const color = t[kind.token]
+  const isShell = row.tool === 'Bash' || row.tool === 'PowerShell'
+  const dot = row.isErrored ? t.codeFlag : row.isInterrupted ? t.codeComment : row.isRunning ? t.accent : t.number
+  const title = `${kind.label}${run.index ? ` ${String(run.index).padStart(2, '0')}` : ''}`
+  const state = row.isRunning ? 'running' : row.isInterrupted ? 'interrupted' : row.isErrored ? 'failed' : run.ms === undefined ? kind.meta : `${kind.meta} · ${elapsed(run.ms)}`
+  const head = `● ${title}    ${state} `
+  const avail = Math.max(10, columns - 6)
+  const target = cardTarget(row)
+  const wrapped = (target ?? '').split('\n').flatMap(line => hardWrap(line, avail))
+  const visible = wrapped.slice(0, CARD_LINES)
+  const result = toolResult(row)
+  const bar = <Text color={color} dimColor>{'│ '}</Text>
+  return (
+    <Box flexDirection="column">
+      <Text wrap="truncate-end">
+        <Text color={dot}>{row.isRunning ? '◌ ' : '● '}</Text>
+        <Text bold color={color}>{title}</Text>
+        <Text dimColor>{`    ${state} `}</Text>
+        <Text color={t.rule ?? t.codeComment} dimColor>{'─'.repeat(Math.max(0, columns - width(head) - 2))}</Text>
+      </Text>
+      {target === undefined ? null : visible.map((line, i) => (
+        <Text key={`l${i}`} wrap="truncate-end">
+          {bar}
+          <Text bold color={t.accent}>{i === 0 ? '❯ ' : '  '}</Text>
+          {isShell ? codeLine(el, style, line, 'bash', `c${i}`) : <Text color={/^(~|\.{0,2}\/|[A-Za-z]:\\)/.test(target) ? t.path : t.inlineCode}>{line}</Text>}
+        </Text>
+      ))}
+      {wrapped.length > visible.length ? <Text>{bar}<Text dimColor>{`  … +${wrapped.length - visible.length} lines`}</Text></Text> : null}
+      {result ? (
+        <Text wrap="truncate-end">
+          {bar}
+          <Text color={result.tone === 'bad' ? t.codeFlag : dot}>{'● '}</Text>
+          <Text color={result.tone === 'bad' ? t.codeFlag : undefined} dimColor={result.tone === 'dim'}>{result.text}</Text>
+        </Text>
+      ) : null}
+    </Box>
+  )
+}
+
+export const renderToolRow = (el: ElementTable, style: Style, row: ToolRow & { output?: unknown }, columns = 100, run?: ToolRun): RenderElement => {
+  if (style.toolStyle === 'card') return renderToolCard(el, style, row, columns, run)
   const { Box, Text } = el
   const t = style.theme
   const isShell = row.tool === 'Bash' || row.tool === 'PowerShell'
@@ -665,9 +788,6 @@ export const renderToolRow = (el: ElementTable, style: Style, row: ToolRow, colu
   ))
 }
 
-const OUTPUT_LINES = 120
-
-const lines = (value: unknown): string[] => (typeof value === 'string' && value !== '' ? value.replace(/\n$/, '').split('\n') : [])
 
 export const renderExpandedShell = (el: ElementTable, style: Style, row: ToolRow & { output?: unknown }): RenderElement => {
   const { Box, Text } = el
@@ -734,8 +854,11 @@ export const groupSummary = (calls: readonly { tool: string }[]): string => {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-export const renderToolGroup = (el: ElementTable, style: Style, calls: readonly ToolRow[], isActive: boolean, columns = 100): RenderElement => {
+export const renderToolGroup = (el: ElementTable, style: Style, calls: readonly (ToolRow & { tool_use_id?: string; output?: unknown })[], isActive: boolean, columns = 100, runs?: ReadonlyMap<string, ToolRun>): RenderElement => {
   const { Box, Text } = el
+  if (style.toolStyle === 'card') {
+    return <Box flexDirection="column" rowGap={1}>{calls.map((c, i) => <Box key={c.tool_use_id ?? `k${i}`}>{renderToolCard(el, style, { ...c, isRunning: c.isRunning && isActive }, columns, c.tool_use_id ? runs?.get(c.tool_use_id) : undefined)}</Box>)}</Box>
+  }
   const t = style.theme
   const failed = calls.filter(c => c.isErrored).length
   const running = isActive && calls.some(c => c.isRunning)

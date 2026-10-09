@@ -139,7 +139,7 @@ test('tool rows read like Ran <command> with shell colors', { options: { toolSty
   }
 })
 
-test('file tools show the path in the path color and failures say so', async $ => {
+test('file tools show the path in the path color and failures say so', { options: { toolStyle: 'chat' } }, async $ => {
   const ui = await $.ui.mount({ ...toolRow('Edit', { file_path: '/tmp/app.ts' }, { isErrored: true }), surface: 'terminal' })
   expect((await ui.find({ type: 'Text', text: /^Edited$/ }))).toBeDefined()
   expect((await ui.find({ type: 'Text', text: /^\/tmp\/app\.ts$/ }))?.props.color).toBe(PRESETS['catppuccin-mocha'].path)
