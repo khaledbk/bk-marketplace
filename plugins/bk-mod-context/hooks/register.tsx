@@ -79,14 +79,14 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  // A /model switch sends no request, so the switch itself names the new model.
+  // A /model switch sends no request, so the switch itself names the new model and forces the redraw.
   on('classic.PostModelSwitch', async ($, e, next) => {
-    const switched = await next(e)
     if (!e.agent_id) {
       await noteModel($, e.to_model).catch(() => undefined)
       await measure($).catch(() => undefined)
+      $.ui.invalidate('ui.render')
     }
-    return switched
+    return next(e)
   })
 
   on('classic.PostToolUse', async ($, e, next) => {
