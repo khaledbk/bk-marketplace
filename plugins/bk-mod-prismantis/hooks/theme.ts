@@ -25,6 +25,7 @@ export type Style = {
   mermaidAscii: boolean
   copyButtons: boolean
   fullWidth: boolean
+  tableCopy: 'values' | 'markdown'
   centerFigures: boolean
   diagramHints: boolean
   rtl: 'auto' | Terminal | 'off'
@@ -60,6 +61,7 @@ export const resolveStyle = (options: PluginOptions): Style => {
     mermaidAscii: options.mermaidAscii === true,
     copyButtons: options.copyButtons !== false,
     fullWidth: options.fullWidth !== false,
+    tableCopy: options.tableCopy === 'markdown' ? 'markdown' : 'values',
     centerFigures: options.centerFigures !== false,
     diagramHints: options.diagramHints !== false && options.mermaid !== false,
     rtl,

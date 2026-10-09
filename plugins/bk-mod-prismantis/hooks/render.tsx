@@ -496,8 +496,21 @@ const renderList = (el: ElementTable, style: Style, block: Extract<Block, { kind
 export type CopyButton = (text: string | (() => string), key: string, label?: string) => RenderElement | null
 export type Drawn = Map<number, { element: RenderElement; art: string }>
 
-const copySource = (block: Block): string | undefined =>
-  block.kind === 'code' ? block.lines.join('\n') : block.kind === 'table' || block.kind === 'list' ? block.raw : block.kind === 'quote' || block.kind === 'alert' ? block.raw.split('\n').map(line => line.replace(/^\s*>\s?/, '')).join('\n') : undefined
+const cellText = (inline: Inline[]): string =>
+  inline.map(n => (n.kind === 'link' ? (n.text === n.href ? n.href : `${n.text} (${n.href})`) : 'children' in n ? cellText(n.children) : n.text)).join('').trim()
+
+/**
+ * A table's body as plain values, tab between cells and a line per row, so it
+ * pastes as text or into a sheet; a leading numbering column is left out.
+ */
+export const tableValues = (block: Extract<Block, { kind: 'table' }>): string => {
+  const rows = block.rows.map(row => row.map(cellText))
+  const numbered = block.header.length > 1 && (/^(#|no\.?|n)$/i.test(cellText(block.header[0] ?? [])) || (rows.length > 0 && rows.every((row, i) => row[0] === String(i + 1))))
+  return rows.map(row => row.slice(numbered ? 1 : 0).join('\t')).join('\n')
+}
+
+const copySource = (block: Block, style: Style): string | undefined =>
+  block.kind === 'code' ? block.lines.join('\n') : block.kind === 'table' ? (style.tableCopy === 'markdown' ? block.raw : tableValues(block)) : block.kind === 'list' ? block.raw : block.kind === 'quote' || block.kind === 'alert' ? block.raw.split('\n').map(line => line.replace(/^\s*>\s?/, '')).join('\n') : undefined
 
 // Grows along a row parent and stretches across a column one, so a border spans the room it is given.
 const framed = (style: Style) => (style.fullWidth ? { flexGrow: 1 } : { alignSelf: 'flex-start' as const })
@@ -538,7 +551,7 @@ export const renderBlocks = (el: ElementTable, style: Style, blocks: Block[], co
   })
   const copied = rendered.map((element, b) => {
     const block = blocks[b]
-    const text = block ? copySource(block) : undefined
+    const text = block ? copySource(block, style) : undefined
     const isPlainCode = block?.kind === 'code' && !drawn.has(b)
     const art = drawn.get(b)?.art ?? (block?.kind === 'table' ? () => tableArt(block) : undefined)
     const first = text === undefined || isPlainCode ? null : copy?.(text, `copy${b}`, art === undefined || block?.kind === 'table' ? undefined : '⧉ source')

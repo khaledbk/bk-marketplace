@@ -1,6 +1,6 @@
 {
   "name": "bk-mod-prismantis",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Colorful, themeable rendering for replies: tables, headings, code, Mermaid diagrams, numbers, paths and links. BK fork of prismantis with full-width frames and centered figures.",
   "author": {
     "name": "BK Organization"
@@ -300,6 +300,16 @@
       "title": "Center figures",
       "description": "Center tables and Mermaid diagrams in the reply column. Right-to-left content keeps its own alignment.",
       "default": true
+    },
+    "tableCopy": {
+      "type": "string",
+      "title": "Table copy",
+      "description": "What a table's copy button puts on the clipboard. values: the body cells as plain text, tab between cells, a leading # column left out. markdown: the table as written.",
+      "default": "values",
+      "options": [
+        "values",
+        "markdown"
+      ]
     }
   }
 }

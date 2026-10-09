@@ -189,7 +189,7 @@
       "source": "bk-mod-prismantis",
       "displayName": "BK Prismantis",
       "description": "Themed rendering for replies: tables, Mermaid diagrams, code, headings. Fork of prismantis with full-width frames and centered figures.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "BK Organization"
       },
