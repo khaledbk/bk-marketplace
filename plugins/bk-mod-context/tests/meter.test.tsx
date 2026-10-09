@@ -100,14 +100,27 @@ test('the effort comes from the live request and survives a measurement that can
 })
 
 for (const tokens of [0, 500_000, 1_000_000]) {
-  test(`the bulb is three cells wide at ${tokens} tokens`, async ($, on) => {
+  test(`the ball is one cell with a thin pulse after it at ${tokens} tokens`, async ($, on) => {
     world(on, { tokens, window: 1_000_000, percent: tokens / 10_000 })
     await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
     const ui = await $.ui.mount(band())
-    const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
-    expect(drawn).toContain(String.fromCodePoint(0xe0b6))
-    expect(drawn).toContain('█')
-    expect(drawn).toContain(String.fromCodePoint(0xe0b4))
+    const meter = (await ui.drawn({ in: 'meter' })) as any
+    const bar = meter.children[0].children.map((c: any) => c.children[0]).join('')
+    expect([...bar].filter(ch => ch === '●').length).toBe(1)
+    expect(bar).not.toContain(String.fromCodePoint(0xe0b6))
+    const ball = [...bar].indexOf('●')
+    if (ball < [...bar].length - 1) expect([...bar][ball + 1]).toBe('╸')
+    expect([...bar].slice(ball + 2).every(ch => ch === '─')).toBe(true)
     await ui.unmount()
   })
 }
+
+test('the effort comes from the hook input Claude Code stamps on Stop', async ($, on) => {
+  world(on, { tokens: 10_000, window: 1_000_000, percent: 1 }, 'claude-opus-5-5', '')
+  on('classic.Stop', () => ({}) as any)
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  await $.classic.Stop({ effort: { level: 'high' } } as any)
+  expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('high')
+  await ui.unmount()
+})
