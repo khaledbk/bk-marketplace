@@ -19,6 +19,22 @@ const fillOf = (context: SessionContextUsage): ContextFill => ({
   isKnown: typeof context.tokens === 'number',
 })
 
+const MANAGED_SETTINGS = ['/Library/Application Support/ClaudeCode/managed-settings.json', '/etc/claude-code/managed-settings.json']
+
+// Before the first request or tool call stamps one, the effort is only in the settings files, managed first.
+async function settingsEffort($: EngineInterface): Promise<string> {
+  const home = await $.env.get('HOME').catch(() => undefined)
+  for (const path of [...MANAGED_SETTINGS, ...(home ? [`${home}/.claude/settings.json`] : [])]) {
+    try {
+      const level = JSON.parse(String(await $.fs.read(path)))?.effortLevel
+      if (typeof level === 'string' && level) return level
+    } catch {
+      continue
+    }
+  }
+  return ''
+}
+
 async function effortOf($: EngineInterface): Promise<string> {
   try {
     const row = (await $.config.list()).find(r => /effort/i.test(r.key))
@@ -26,7 +42,7 @@ async function effortOf($: EngineInterface): Promise<string> {
   } catch {
     // A host without a config menu still has the variable the engine exports.
   }
-  return (await $.env.get('CLAUDE_EFFORT').catch(() => undefined)) ?? ''
+  return (await $.env.get('CLAUDE_EFFORT').catch(() => undefined)) || (await settingsEffort($))
 }
 
 async function measure($: EngineInterface, context?: SessionContextUsage): Promise<void> {

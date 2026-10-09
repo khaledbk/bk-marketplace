@@ -169,3 +169,16 @@ test('a model request with an empty effort keeps the label it had', async ($, on
   expect(drawn).not.toContain('null')
   await ui.unmount()
 })
+
+test('before any request the effort comes from the managed settings file', async ($, on) => {
+  world(on, { tokens: 10_000, window: 1_000_000, percent: 1 }, 'claude-opus-5-5', '')
+  on('env.get', (_$, e: any) => ({ value: e.name === 'HOME' ? '/Users/k' : undefined }) as any)
+  on('fs.read', (_$, e: any) => {
+    if (e.path === '/Library/Application Support/ClaudeCode/managed-settings.json') return { value: JSON.stringify({ effortLevel: 'xhigh' }) } as any
+    throw new Error('ENOENT')
+  })
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('xhigh')
+  await ui.unmount()
+})
