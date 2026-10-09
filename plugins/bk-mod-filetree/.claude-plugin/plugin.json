@@ -1,6 +1,6 @@
 {
   "name": "bk-mod-filetree",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "IDE-style file tree pane that shows where Claude reads, writes and commits. BK fork of claude-code-filetree, hardened.",
   "types": "./types/index.d.ts",
   "author": {

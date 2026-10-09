@@ -4,7 +4,7 @@ import { isLaunchable, openCommand, revealCommand } from './open'
 import type { Activity, FileNode, FileTree, Theme } from '../types'
 import { BRANCH_ICON, chainOf, type GitAction, gitActions, readOnly, readTargets, resolve, TONES } from './git'
 import type { RowSpec, RowsProps, Seg } from './rows'
-import { CHEVRON_CLOSED, CHEVRON_OPEN, fileIcon, GIT_COLOR } from './icons'
+import { CHEVRON_CLOSED, CHEVRON_OPEN, fileIcon, GIT_COLOR, iconColor } from './icons'
 import {
   ancestorsOf,
   type Change,
@@ -1234,7 +1234,6 @@ export const register: Register = (on, options) => {
       const isBright = bright.has(n.id)
       const isDim = !isBright && dimmed.has(n.id)
       const tone = t.flashTones[n.id] ?? 'orange'
-      const iconColor = isIgnored ? theme.muted : (gitColor ?? (n.hidden ? theme.muted : n.kind === 'dir' ? theme.accent : theme.muted))
       const nameColor = isIgnored ? theme.muted : (gitColor ?? (n.hidden ? theme.muted : theme.fg || undefined))
       const loc = t.diff[n.id]
       const meta = t.showSize
@@ -1260,12 +1259,13 @@ export const register: Register = (on, options) => {
       const name = n.name.length <= cols ? n.name : ext && cols > ext.length + 2 ? n.name.slice(0, cols - ext.length - 1) + '…' + ext : n.name.slice(0, cols - 1) + '…'
       const caret = n.kind === 'dir' ? (unicode ? (r.open ? '▾' : '▸') : r.open ? CHEVRON_OPEN : CHEVRON_CLOSED) + ' ' : '  '
       const isRepo = n.kind === 'dir' && n.id === t.top
+      const glyphColor = isIgnored ? theme.muted : iconColor(n, isRepo)
       const glyph = unicode ? (n.kind === 'dir' ? '■' : '·') : fileIcon(n, r.open, isRepo)
       const lit = isBright || isDim
       const left: Seg[] = [
         { t: '  '.repeat(r.depth) },
         { t: caret, c: theme.muted },
-        lit ? { t: glyph + ' ', sh: tone, dim: isDim, one: true } : { t: glyph + ' ', c: iconColor },
+        lit ? { t: glyph + ' ', sh: tone, dim: isDim, one: true } : { t: glyph + ' ', c: glyphColor },
         lit ? { t: name, sh: tone, dim: isDim, b: isBright } : { t: name, c: nameColor, b: n.id === t.selected, s: status === 'D' && n.kind !== 'dir' },
       ]
       const right: Seg[] = []
