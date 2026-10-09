@@ -15,6 +15,7 @@ Install from the BK marketplace:
 | Plugin name | `prismantis` | `bk-mod-prismantis`; the `$.prismantis` noun, the `prismantis.markdown` event and `/prismantis` are unchanged. |
 | Frames | Prompt bubble, shell output, alerts and H1 banners hug their text | New `fullWidth` option, default on: they span the available width. |
 | Tables and diagrams | Left-aligned | New `centerFigures` option, default on: tables and Mermaid figures are centered. Right-to-left content keeps its alignment. |
+| Table copy button | Copied the table's markdown source | New `tableCopy` option, default `values`: the body cells as plain text, tab between cells, a line per row, a leading `#` column left out, links as `text (address)`. `markdown` restores upstream behaviour. |
 | Pressable links | Any scheme (`file:`, `vscode:`, custom app schemes) | `http` and `https` only; other links render as text. |
 | Copy buttons | Raw source copied | Bidi overrides, isolates and invisible spaces stripped before copying, so a pasted command matches what was shown. The engine already refuses drawn text with control characters. |
 | Prompt hint | Asked for "one small diagram" and "skip diagrams for simple answers" | Asks for a table, diagram or chart whenever a reply carries a structure, flow or series, and defers to the active output style. |

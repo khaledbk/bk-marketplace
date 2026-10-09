@@ -49,13 +49,31 @@ test('an escaped trailing pipe stays in the cell', async () => {
   expect(table.rows[0]?.[1]?.map(n => ('text' in n ? n.text : '')).join('')).toBe('y|')
 })
 
-test('copying a table returns its exact markdown', async ($, on) => {
+test('copying a table returns its exact markdown with tableCopy markdown', { options: { tableCopy: 'markdown' } }, async ($, on) => {
   const copied = stubClipboard(on)
   const source = '| a | b |\n|:--|--:|\n| `x\\|y` | **2** |'
   const ui = await $.ui.mount(mount(source))
   const [button] = await ui.findAll({ type: 'Button' })
   await ui.press({ key: button!.key! })
   expect(copied).toEqual([source])
+  await ui.unmount()
+})
+
+test('copying a table returns its cell values by default, without markup', async ($, on) => {
+  const copied = stubClipboard(on)
+  const ui = await $.ui.mount(mount('| a | b |\n|:--|--:|\n| `x\\|y` | **2** |\n| [docs](https://example.com) | https://example.com/raw |'))
+  const [button] = await ui.findAll({ type: 'Button' })
+  await ui.press({ key: button!.key! })
+  expect(copied).toEqual(['x|y\t2\ndocs (https://example.com)\thttps://example.com/raw'])
+  await ui.unmount()
+})
+
+test('copying a numbered table leaves the # column out', async ($, on) => {
+  const copied = stubClipboard(on)
+  const ui = await $.ui.mount(mount('| # | Waiting on you |\n| :-- | :-- |\n| 1 | Merge PR #3: https://github.com/khaledbk/bk-marketplace/pull/3 |'))
+  const [button] = await ui.findAll({ type: 'Button' })
+  await ui.press({ key: button!.key! })
+  expect(copied).toEqual(['Merge PR #3: https://github.com/khaledbk/bk-marketplace/pull/3'])
   await ui.unmount()
 })
 
