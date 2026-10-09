@@ -105,7 +105,7 @@ for (const tokens of [0, 500_000, 1_000_000]) {
     await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
     const ui = await $.ui.mount(band())
     const meter = (await ui.drawn({ in: 'meter' })) as any
-    const bar = meter.children[0].children.map((c: any) => c.children[0]).join('')
+    const bar = meter.children[0].children[0].children.map((c: any) => c.children[0]).join('')
     expect([...bar].filter(ch => ch === '●').length).toBe(1)
     expect(bar).not.toContain(String.fromCodePoint(0xe0b6))
     const ball = [...bar].indexOf('●')
@@ -124,3 +124,16 @@ test('the effort comes from the hook input Claude Code stamps on Stop', async ($
   expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('high')
   await ui.unmount()
 })
+
+test('the labels keep their width and the bar takes what is left', async ($, on) => {
+  world(on, { tokens: 435_000, window: 1_000_000, percent: 44 }, 'claude-opus-5-5', 'high')
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  const meter = (await ui.drawn({ in: 'meter' })) as any
+  expect(meter.children[0].props.flexGrow).toBe(1)
+  expect(meter.children[0].children[0].props.wrap).toBe('truncate-end')
+  expect(meter.children[1].props.flexShrink).toBe(0)
+  expect(JSON.stringify(meter.children[1])).toContain('high')
+  await ui.unmount()
+})
+
