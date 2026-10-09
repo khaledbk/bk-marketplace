@@ -6,7 +6,7 @@
     "email": "khaledbenk@gmail.com"
   },
   "description": "The only approved plugin marketplace for BK Organization.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "metadata": {
     "pluginRoot": "./plugins"
   },
