@@ -72,10 +72,8 @@ export const register: Register = (on, options) => {
   on('turn.step', async function* ($, e, next) {
     const response = yield* next(e)
     // The request carries the effort the session actually sends, which no config row names reliably.
-    if (!e.agentId && e.effort !== undefined) {
-      const effort = String(e.effort)
-      await update($, SETTING, setting => (setting.effort === effort ? setting : { ...setting, effort }))
-    }
+    const effort = typeof e.effort === 'string' ? e.effort : ''
+    if (!e.agentId && effort) await update($, SETTING, setting => (setting.effort === effort ? setting : { ...setting, effort }))
     if (!e.agentId && response.usage) {
       const used = response.usage.input_tokens + response.usage.cache_read_input_tokens + response.usage.cache_creation_input_tokens + response.usage.output_tokens
       await update($, FILL, fill => ({ ...fill, tokens: used, isKnown: true }))

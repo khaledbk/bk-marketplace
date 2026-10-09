@@ -145,7 +145,27 @@ test('the labels keep their width and the bar takes what is left', async ($, on)
   expect(meter.children[0].props.flexGrow).toBe(1)
   expect(meter.children[0].children[0].props.wrap).toBe('truncate-end')
   expect(meter.children[1].props.flexShrink).toBe(0)
+  expect(meter.children[1].children).toHaveLength(1)
+  expect(meter.children[1].children[0].props.wrap).toBe('truncate-end')
   expect(JSON.stringify(meter.children[1])).toContain('high')
   await ui.unmount()
 })
 
+
+test('a model request with an empty effort keeps the label it had', async ($, on) => {
+  world(on, { tokens: 10_000, window: 1_000_000, percent: 1 }, 'claude-opus-5-5', 'high')
+  on('turn.step', async function* () {
+    return { turnId: 't', index: 0, answer: '', toolUses: [], stopReason: 'end_turn', usage: { model: 'claude-opus-5-5', input_tokens: 1, output_tokens: 1, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as any
+  } as any)
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  for (const effort of ['', null]) {
+    const step = $.turn.step({ turnId: 't', index: 0, model: 'claude-opus-5-5', effort, messageCount: 1 } as any) as any
+    for await (const _ of step) void _
+    await step.result
+  }
+  const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
+  expect(drawn).toContain('high')
+  expect(drawn).not.toContain('null')
+  await ui.unmount()
+})

@@ -78,7 +78,8 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   const label = `${props.model}${props.effort ? ` · ${props.effort}` : ''}`
   const rightWidth = 1 + percent.length + 2 + amount.length + 2 + [...props.head].length + 1 + [...label].length
   const columns = surface.columns || props.columns
-  const bar = Math.max(8, columns - rightWidth - 1)
+  // Two spare cells keep the row off the terminal's last column, where a full line wraps.
+  const bar = Math.max(8, columns - rightWidth - 2)
   const lead = Math.max(0, Math.min(bar, Math.round(ratio * bar)))
 
   let state = surface.state
@@ -118,13 +119,15 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
         <Text wrap="truncate-end">{cells}</Text>
       </Box>
       <Box flexShrink={0} flexDirection="row">
-        <Text> </Text>
-        <Text bold color={heat}>{percent}</Text>
-        <Text color={props.dim}>{`  ${amount}  `}</Text>
-        <Text color={props.headColor}>{props.head}</Text>
-        <Text bold color={props.text}>{` ${props.model}`}</Text>
-        {props.effort ? <Text color={props.dim}> · </Text> : null}
-        {props.effort ? <Text bold color={props.effortColor}>{props.effort}</Text> : null}
+        <Text wrap="truncate-end">
+          <Text> </Text>
+          <Text bold color={heat}>{percent}</Text>
+          <Text color={props.dim}>{`  ${amount}  `}</Text>
+          <Text color={props.headColor}>{props.head}</Text>
+          <Text bold color={props.text}>{` ${props.model}`}</Text>
+          {props.effort ? <Text color={props.dim}> · </Text> : null}
+          {props.effort ? <Text bold color={props.effortColor}>{props.effort}</Text> : null}
+        </Text>
       </Box>
     </Box>
   )
