@@ -182,3 +182,28 @@ test('before any request the effort comes from the managed settings file', async
   expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('xhigh')
   await ui.unmount()
 })
+
+test('a model switch redraws the model and the window before the next prompt', async ($, on) => {
+  let model = 'claude-opus-5-5[1m]'
+  let window = 1_000_000
+  on('session.start', (_$, e) => ({ cwd: e.cwd }) as any)
+  on('ui.render', ($, e) => {
+    const { Text } = $.ui.resolve(e)
+    return <Text>engine band</Text>
+  })
+  on('session.model', () => ({ value: model }))
+  on('session.usage', () => ({ value: { startedAt: 0, context: { tokens: 40_000, window, percent: 4 }, rateLimits: [] } }) as any)
+  on('config.list', () => ({ value: [{ key: 'effortLevel', label: 'Effort', kind: 'choice', value: 'high' }] }) as any)
+  on('classic.PostModelSwitch', () => ({}) as any)
+  await $.session.start({ cwd: '/w', surface: 'terminal', isInteractive: true } as any)
+  const ui = await $.ui.mount(band())
+  expect(JSON.stringify(await ui.drawn({ in: 'meter' }))).toContain('Opus 5.5 1M')
+  model = 'claude-sonnet-5-5'
+  window = 200_000
+  await $.classic.PostModelSwitch({ from_model: 'claude-opus-5-5[1m]', to_model: model, requested_model: 'sonnet', source: 'command' } as any)
+  const drawn = JSON.stringify(await ui.drawn({ in: 'meter' }))
+  expect(drawn).toContain('Sonnet 5.5')
+  expect(drawn).toContain('40K/200K')
+  expect(drawn).not.toContain('Opus')
+  await ui.unmount()
+})
