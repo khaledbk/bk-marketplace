@@ -17,12 +17,15 @@ export type MeterProps = {
   columns: number
 }
 
-type Local = { phase: number; seen: number; sweepAt: number; ref: { stop?: () => void } }
+type Local = { phase: number; seen: number; advancedAt: number; stretch: number; ref: { stop?: () => void } }
 
 const TICK_MS = { full: 90, calm: 260, off: 0 } as const
-const BREATH_TICKS = 16
-const SWEEP_CELLS_PER_TICK = 1.5
+const BREATH_TICKS = 12
 const GLOW = ['▓', '▓', '▒', '░']
+const EMBERS = 3
+const PUFF = 6
+const MAX_TRAIL = 14
+const CATCH_UP_CELLS_PER_TICK = 2
 const FLAME = '#ffe066'
 
 type Rgb = [number, number, number]
@@ -72,22 +75,6 @@ export const tokensText = (n: number): string => {
 
 const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   const { Box, Text } = surface.elements
-  let state = surface.state
-  if (state === undefined) {
-    state = { phase: 0, seen: props.tokens, sweepAt: -1_000, ref: {} }
-    surface.setState(state)
-    const ms = TICK_MS[props.animation] ?? 0
-    if (ms > 0) {
-      state.ref.stop = surface.every(ms, () => {
-        const cur = surface.state
-        if (cur) surface.setState({ ...cur, phase: cur.phase + 1 })
-      })
-    }
-  } else if (props.tokens !== state.seen) {
-    state = { ...state, seen: props.tokens, sweepAt: props.tokens > state.seen ? state.phase : state.sweepAt }
-    surface.setState(state)
-  }
-
   const window = Math.max(1, props.window)
   const ratio = props.isKnown ? Math.max(0, Math.min(1, props.tokens / window)) : 0
   const percent = props.isKnown ? `${Math.round(ratio * 100)}%` : '--%'
@@ -98,22 +85,43 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
   const columns = surface.columns || props.columns
   const bar = Math.max(8, columns - rightWidth - 1)
   // The rounded cap sits one cell behind the core, so the core starts one cell in.
-  const lead = Math.max(1, Math.min(bar - 1, Math.round(ratio * bar)))
+  const leadAt = (tokens: number) => Math.max(1, Math.min(bar - 1, Math.round((props.isKnown ? Math.max(0, Math.min(1, tokens / window)) : 0) * bar)))
+  const lead = leadAt(props.tokens)
+
+  let state = surface.state
+  if (state === undefined) {
+    state = { phase: 0, seen: props.tokens, advancedAt: -1_000, stretch: EMBERS, ref: {} }
+    surface.setState(state)
+    const ms = TICK_MS[props.animation] ?? 0
+    if (ms > 0) {
+      state.ref.stop = surface.every(ms, () => {
+        const cur = surface.state
+        if (cur) surface.setState({ ...cur, phase: cur.phase + 1 })
+      })
+    }
+  } else if (props.tokens !== state.seen) {
+    // An advance leaves embers back to where the ball was; they then catch up to it.
+    const grew = props.tokens > state.seen
+    const stretch = Math.min(MAX_TRAIL, Math.max(PUFF, lead - leadAt(state.seen) + EMBERS))
+    state = { ...state, seen: props.tokens, advancedAt: grew ? state.phase : state.advancedAt, stretch: grew ? stretch : state.stretch }
+    surface.setState(state)
+  }
 
   const still = props.animation === 'off'
   const breath = still ? 0.5 : (1 + Math.sin((state.phase / BREATH_TICKS) * Math.PI * 2)) / 2
   // Two out-of-step waves make the core flicker like a flame rather than blink.
   const flicker = still ? 0.5 : (2 + Math.sin(state.phase * 1.7) + Math.sin(state.phase * 2.9)) / 4
-  const sweep = (state.phase - state.sweepAt) * SWEEP_CELLS_PER_TICK
-  const sweeping = !still && sweep >= 0 && sweep < lead + 4
+  const trail = still ? EMBERS : Math.max(EMBERS, state.stretch - (state.phase - state.advancedAt) * CATCH_UP_CELLS_PER_TICK)
+  const spark = (k: number) => (still ? 0.5 : (2 + Math.sin(state.phase * 1.7 + k * 1.3) + Math.sin(state.phase * 2.9 + k * 0.7)) / 4)
 
   const cells = []
   for (let i = 0; i < bar; i++) {
     if (i < lead - 1) {
       const base = heatAt(((i + 0.5) / bar) * window, window, props.greenUntil)
-      const near = lead - 1 - i
-      const lit = sweeping && Math.abs(i - sweep) < 1.5 ? 0.6 : near === 1 ? 0.3 + 0.25 * flicker : 0
-      cells.push(<Text color={lit ? mix(base, '#ffffff', lit) : base}>━</Text>)
+      // Embers stay on the thin bar line, dimmer than the front pulse; past the resting length they read as sparks.
+      const k = lead - 1 - i
+      const ember = k <= trail ? (1 - (k - 1) / trail) * (0.2 + 0.45 * spark(k)) : 0
+      cells.push(<Text color={ember > 0 ? mix(base, FLAME, ember) : base}>{k > EMBERS && k <= trail ? '╍' : '━'}</Text>)
     } else if (i === lead - 1) {
       cells.push(<Text color={mix(heat, '#ffffff', 0.1)}>{'\ue0b6'}</Text>)
     } else if (i === lead) {
@@ -121,7 +129,9 @@ const Meter: ClientModule<MeterProps, Local> = (props, surface) => {
     } else {
       // The square core runs straight into the pulse; only its brightness breathes, never its width.
       const d = i - lead
-      const glow = d <= GLOW.length ? (1 - (d - 1) / GLOW.length) * (0.35 + 0.45 * breath) : 0
+      // The breath reaches each cell a little later than the one before, so the flame licks forward.
+      const lick = still ? breath : (1 + Math.sin(((state.phase - d * 2) / BREATH_TICKS) * Math.PI * 2)) / 2
+      const glow = d <= GLOW.length ? (1 - (d - 1) / GLOW.length) * (0.35 + 0.45 * lick) : 0
       cells.push(glow > 0 ? <Text color={mix(props.track, heat, glow)}>{GLOW[d - 1]}</Text> : <Text color={props.track}>─</Text>)
     }
   }
